@@ -1,0 +1,29 @@
+Hướng dẫn hiệu chuẩn 4-20mA
+
+--------------------------------------------------------------------------------
+1. "at+statedac?"
+- 0: Tín hiệu 4-20mA xuất ra từ kết quả đo 
+- 1: Tín hiệu 4-20mA xuất ra từ giá trị DAC nạp qua lệnh AT
+2. "at+statedac=?
+- 0: Cài tín hiệu 4-20mA xuất ra từ kết quả đo
+- 1: Cài tín hiệu 4-20mA xuất ra từ giá trị DAC nạp qua lệnh AT
+*Lưu ý: Cần setup lại giá trị bằng 0 sau khi hiệu chuẩn hoặc tắt đi bật lại 
+thiết bị để tín hiệu 4-20mA xuất ra từ giá trị đo
+---------------------------------------------------------------------------------
+3. "at+valuedac?"
+- 0 - 4095: Đọc giá trị DAC điểu khiển tín hiệu 4-20mA
+4. "at+valuedac?"
+- 0 - 4095: Ghi giá trị DAC điều khiển tín hiệu 4-20mA
+--------------------------------------------------------------------------------
+5. "at+setdacmin?"
+- 0 - 4095: Đọc giá trị DAC hiệu chuẩn điểm 4mA
+6. "at+setdacmin="
+- 0 - 4095: Ghi giá trị DAC hiệu chuẩn điểm 4mA
+--------------------------------------------------------------------------------
+7. "at+setdacmax?"
+- 0 - 4095: Đọc giá trị DAC hiệu chuẩn điểm 20mA
+8. "at+setdacmax="
+- 0 - 4095: Ghi giá trị DAC hiệu chuẩn điểm 20mA
+--------------------------------------------------------------------------------
+9. "at+currentout?"
+- 4.00 - 20.00 mA: Đọc giá trị dòng điện 
