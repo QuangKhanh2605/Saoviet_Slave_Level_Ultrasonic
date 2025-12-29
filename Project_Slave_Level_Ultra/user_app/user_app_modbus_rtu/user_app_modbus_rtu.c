@@ -10,7 +10,15 @@ uint8_t _Cb_W_ModbusRTU_REG_ID(sData *str, uint16_t Pos);
 uint8_t _Cb_R_ModbusRTU_REG_Baudrate(sData *str, uint16_t Pos);
 uint8_t _Cb_W_ModbusRTU_REG_Baudrate(sData *str, uint16_t Pos);
 
-uint8_t _Cb_R_ModbusRTU_REG_Temp_Object(sData *str, uint16_t Pos);
+uint8_t _Cb_R_ModbusRTU_REG_Unit(sData *str, uint16_t Pos);
+
+uint8_t _Cb_R_ModbusRTU_REG_Decimal_Point(sData *str, uint16_t Pos);
+
+uint8_t _Cb_R_ModbusRTU_REG_Value(sData *str, uint16_t Pos);
+
+uint8_t _Cb_R_ModbusRTU_REG_Zero_Point(sData *str, uint16_t Pos);
+
+//uint8_t _Cb_R_ModbusRTU_REG_Temp_Object(sData *str, uint16_t Pos);
 //uint8_t _Cb_R_ModbusRTU_REG_Temp_Ambient(sData *str, uint16_t Pos);
 
 uint8_t _Cb_W_ModbusRTU_REG_ID_Restore(sData *str, uint16_t Pos);
@@ -40,15 +48,15 @@ struct_CheckList_Reg_Modbus_RTU sCheckList_Reg_Modbus_RTU[] =
       {_E_REGISTER_BEGIN,           NULL,       NULL,     NONE_Register_CallBack,           NONE_Register_CallBack},
       {_E_REGISTER_ID,              0x0000,     1,        _Cb_R_ModbusRTU_REG_ID,           _Cb_W_ModbusRTU_REG_ID},
       {_E_REGISTER_BAUDRATE,        0x0001,     1,        _Cb_R_ModbusRTU_REG_Baudrate,     _Cb_W_ModbusRTU_REG_Baudrate},
-      {_E_REGISTER_DISTANCE,        0x0002,     2,        _Cb_R_ModbusRTU_REG_Temp_Object,  NONE_Register_CallBack},
-//      {_E_REGISTER_TEMP_AMBIENT,    0x0004,     2,        _Cb_R_ModbusRTU_REG_Temp_Ambient, NONE_Register_CallBack},
-      {_E_REGISTER_RESTORE,         0x0003,     1,        NONE_Register_CallBack,           _Cb_W_ModbusRTU_REG_ID_Restore},
-      {_E_REGISTER_COMPENSATION,    0x0004,     2,        _Cb_R_ModbusRTU_REG_Compensation, _Cb_W_ModbusRTU_REG_Compensation},
-      {_E_REGISTER_CALIBPOINT_1,    0x0006,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_1, _Cb_W_ModbusRTU_REG_CalibPoint_1},
-      {_E_REGISTER_CALIBPOINT_2,    0x0008,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_2, _Cb_W_ModbusRTU_REG_CalibPoint_2},
-//      {_E_REGISTER_ALARM_STATE,     0x000D,     1,        _Cb_R_ModbusRTU_REG_Alarm_State,  _Cb_W_ModbusRTU_REG_Alarm_State},
-//      {_E_REGISTER_ALARM_UPPER,     0x000E,     2,        _Cb_R_ModbusRTU_REG_Alarm_Upper,  _Cb_W_ModbusRTU_REG_Alarm_Upper},
-//      {_E_REGISTER_ALARM_LOWER,     0x0010,     2,        _Cb_R_ModbusRTU_REG_Alarm_Lower,  _Cb_W_ModbusRTU_REG_Alarm_Lower},
+//      {_E_REGISTER_DISTANCE,        0x0002,     2,        _Cb_R_ModbusRTU_REG_Temp_Object,  NONE_Register_CallBack},
+      {_E_REGISTER_UNIT,            0x0002,     1,        _Cb_R_ModbusRTU_REG_Unit,          NONE_Register_CallBack},
+      {_E_REGISTER_DECIMAL_POINT,   0x0003,     1,        _Cb_R_ModbusRTU_REG_Decimal_Point, NONE_Register_CallBack},
+      {_E_REGISTER_VALUE,           0x0004,     1,        _Cb_R_ModbusRTU_REG_Value,         NONE_Register_CallBack},
+      {_E_REGISTER_ZERO_POINT,      0x0005,     1,        _Cb_R_ModbusRTU_REG_Zero_Point,    NONE_Register_CallBack},
+      {_E_REGISTER_RESTORE,         0x0006,     1,        NONE_Register_CallBack,           _Cb_W_ModbusRTU_REG_ID_Restore},
+      {_E_REGISTER_COMPENSATION,    0x0007,     2,        _Cb_R_ModbusRTU_REG_Compensation, _Cb_W_ModbusRTU_REG_Compensation},
+      {_E_REGISTER_CALIBPOINT_1,    0x0009,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_1, _Cb_W_ModbusRTU_REG_CalibPoint_1},
+      {_E_REGISTER_CALIBPOINT_2,    0x000B,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_2, _Cb_W_ModbusRTU_REG_CalibPoint_2},
 };
 static uint8_t aDATA_CONFIG[128];
 
@@ -116,20 +124,8 @@ uint8_t _Cb_W_ModbusRTU_REG_Baudrate(sData *str, uint16_t Pos)
     return 0;
 }
 
-/*----------- _E_REGISTER_TEMP_OBJECT -----------*/
-uint8_t _Cb_R_ModbusRTU_REG_Temp_Object(sData *str, uint16_t Pos)
-{
-    uint32_t hexValue = 0;
-    hexValue = Handle_Float_To_hexUint32(sSensorLevel.LevelValueFilter_f);
-    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 8;
-    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue;
-    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 24;
-    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 16;
-    return 1;
-}
-
-/*----------- _E_REGISTER_TEMP_AMBIENT -----------*/
-//uint8_t _Cb_R_ModbusRTU_REG_Temp_Ambient(sData *str, uint16_t Pos)
+///*----------- _E_REGISTER_TEMP_OBJECT -----------*/
+//uint8_t _Cb_R_ModbusRTU_REG_Temp_Object(sData *str, uint16_t Pos)
 //{
 //    uint32_t hexValue = 0;
 //    hexValue = Handle_Float_To_hexUint32(sSensorLevel.LevelValueFilter_f);
@@ -139,6 +135,40 @@ uint8_t _Cb_R_ModbusRTU_REG_Temp_Object(sData *str, uint16_t Pos)
 //    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 16;
 //    return 1;
 //}
+
+/*----------- _E_REGISTER_UNIT -----------*/
+uint8_t _Cb_R_ModbusRTU_REG_Unit(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0x00;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0x01;
+    return 1;
+}
+
+/*----------- _E_REGISTER_DECIMAL_POINT -----------*/
+uint8_t _Cb_R_ModbusRTU_REG_Decimal_Point(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0x00;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0x00;
+    return 1;
+}
+
+/*----------- _E_REGISTER_RESTORE_VALUE -----------*/
+uint8_t _Cb_R_ModbusRTU_REG_Value(sData *str, uint16_t Pos)
+{
+    int16_t Value = 0;
+    Value = (int16_t)(sSensorLevel.LevelValueFilter_f);
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = Value >> 8;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = Value;
+    return 1;
+}
+
+/*----------- _E_REGISTER_ZERO_POINT -----------*/
+uint8_t _Cb_R_ModbusRTU_REG_Zero_Point(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0x00;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0x32;
+    return 1;
+}
 
 /*----------- _E_REGISTER_RESTORE -----------*/
 uint8_t _Cb_W_ModbusRTU_REG_ID_Restore(sData *str, uint16_t Pos)
@@ -255,84 +285,6 @@ uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_2(sData *str, uint16_t Pos)
     Save_CalibTemperature(_KIND_CALIB_POINT_2, Convert_F);
     return 1;
 }
-
-//uint8_t _Cb_R_ModbusRTU_REG_Alarm_State(sData *str, uint16_t Pos)
-//{
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0;
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sTempAlarm.State ;
-//    return 1;
-//}
-//uint8_t _Cb_W_ModbusRTU_REG_Alarm_State(sData *str, uint16_t Pos)
-//{
-//    uint16_t ConvertData = 0;
-//    uint8_t pos = 0;
-//    pos = Pos;
-//    ConvertData = str->Data_a8[pos] << 8 | str->Data_a8[pos+1]; 
-//    if(ConvertData == 0x0001 || ConvertData == 0x0000)
-//    {
-//        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
-//        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
-//        Save_TempAlarm((uint8_t)(ConvertData), sTempAlarm.Alarm_Lower, sTempAlarm.Alarm_Upper);
-//        return 1;
-//    }
-//    return 0;
-//}
-//
-//uint8_t _Cb_R_ModbusRTU_REG_Alarm_Upper(sData *str, uint16_t Pos)
-//{
-//    uint32_t hexValue = 0;
-//    hexValue = Handle_Float_To_hexUint32(sTempAlarm.Alarm_Upper);
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 8;
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue;
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 24;
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 16;
-//    return 1;
-//}
-//uint8_t _Cb_W_ModbusRTU_REG_Alarm_Upper(sData *str, uint16_t Pos)
-//{
-//    uint32_t ConvertData = 0;
-//    float Convert_F = 0;
-//    uint8_t pos = 0;
-//    pos = Pos;
-//    ConvertData = str->Data_a8[pos+2]<<8 | str->Data_a8[pos+3];
-//    ConvertData = (ConvertData << 16) | (str->Data_a8[pos]<<8 | str->Data_a8[pos+1]);
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+2];
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+3];
-//    
-//    Convert_uint32Hex_To_Float(ConvertData, &Convert_F);
-//    Save_TempAlarm(sTempAlarm.State, sTempAlarm.Alarm_Lower, Convert_F);
-//    return 1;
-//}
-//
-//uint8_t _Cb_R_ModbusRTU_REG_Alarm_Lower(sData *str, uint16_t Pos)
-//{
-//    uint32_t hexValue = 0;
-//    hexValue = Handle_Float_To_hexUint32(sTempAlarm.Alarm_Lower);
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 8;
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue;
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 24;
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 16;
-//    return 1;
-//}
-//uint8_t _Cb_W_ModbusRTU_REG_Alarm_Lower(sData *str, uint16_t Pos)
-//{
-//    uint32_t ConvertData = 0;
-//    float Convert_F = 0;
-//    uint8_t pos = 0;
-//    pos = Pos;
-//    ConvertData = str->Data_a8[pos+2]<<8 | str->Data_a8[pos+3];
-//    ConvertData = (ConvertData << 16) | (str->Data_a8[pos]<<8 | str->Data_a8[pos+1]);
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+2];
-//    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+3];
-//    
-//    Convert_uint32Hex_To_Float(ConvertData, &Convert_F);
-//    Save_TempAlarm(sTempAlarm.State, Convert_F, sTempAlarm.Alarm_Upper);
-//    return 1;
-//}
 
 /*===================== Send Data RS485 ======================*/
 /*

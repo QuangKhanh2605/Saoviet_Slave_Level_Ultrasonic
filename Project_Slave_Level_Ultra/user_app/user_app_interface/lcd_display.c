@@ -29,7 +29,7 @@ sParameter_Display   sParaDisplay = {0};
 
 sData   sModelVersion = {(uint8_t *) "LEVEL_ULTRA_SAOVIET", 19}; 
 
-uint8_t aPASSWORD[4] = {"0000"};
+uint8_t aPASSWORD[4] = {"1111"};
 
 uint8_t aSTT_SETTING_FREE[14]   = {"              "};
 uint8_t aSTT_SETTING_ENTER[14]  = {"Enter to Setup"};

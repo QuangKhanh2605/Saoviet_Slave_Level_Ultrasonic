@@ -6,7 +6,7 @@
 #include "user_util.h"
 #include "event_driven.h"
 
-#define NUMBER_SAMPLING_SS      10
+#define NUMBER_SAMPLING_SS      15
 
 #define LEVEL_MIN               50
 #define LEVEL_MAX               600
