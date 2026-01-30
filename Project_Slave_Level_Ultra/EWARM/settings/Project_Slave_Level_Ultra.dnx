@@ -20,7 +20,7 @@
         <stlinkResetStrategy>2</stlinkResetStrategy>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>1371648404</Checksum>
+        <Checksum>2053645610</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -63,6 +63,7 @@
         <Fmt3>sScreenInformation-ParaMax_u8	3	0</Fmt3>
         <Fmt4>sScreenInformation-Para_u8	3	0</Fmt4>
         <Fmt5>struct_CalibDAC-stateDAC_u8	3	0</Fmt5>
+        <Fmt6>struct_ModeConfig-Mode_u8	3	0</Fmt6>
     </struct_types>
     <Trace2>
         <Enabled>0</Enabled>

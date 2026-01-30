@@ -8,8 +8,19 @@
 
 #define NUMBER_SAMPLING_SS      15
 
-#define LEVEL_MIN               50
-#define LEVEL_MAX               600
+#define KIND_SENSOR 6   // hoac 9
+
+#if (KIND_SENSOR == 6)
+  #define LEVEL_MIN 50
+  #define LEVEL_MAX 600
+  #define END_RECV 4
+#elif (KIND_SENSOR == 9)
+  #define LEVEL_MIN 50
+  #define LEVEL_MAX 900
+  #define END_RECV 5
+#else
+  #error "KIND_SENSOR khong hop le"
+#endif
 
 #define CURR_OUT_MIN            4
 #define CURR_OUT_MAX            20
@@ -68,9 +79,16 @@ typedef struct
     uint16_t DAC_ATcmd_u16;
 }struct_CalibDAC;
 
+typedef struct
+{
+    uint8_t Mode_u8;
+    uint16_t Compensation_Level_u16;
+}struct_ModeConfig;
+
 extern sEvent_struct        sEventAppSensor[];
 extern struct_TempAlarm     sTempAlarm;
 extern struct_SensorLevel   sSensorLevel;
+extern struct_ModeConfig    sModeConfig;
 /*====================Function Handle====================*/
 
 uint8_t    AppSensor_Task(void);
@@ -84,6 +102,9 @@ void       Init_TempAlarm(void);
 
 void       Save_CalibDAC(uint16_t DAC_Min, uint16_t DAC_Max);
 void       Init_CalibDAC(void);
+
+void       Save_ModeConfig(uint8_t Mode, uint16_t Level);
+void       Init_ModeConfig(void);
 
 float      Filter_pH(float var);
 float      ConvertTemperature_Calib(float var);

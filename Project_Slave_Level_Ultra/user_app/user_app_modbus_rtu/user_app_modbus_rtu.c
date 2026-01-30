@@ -32,6 +32,12 @@ uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_1(sData *str, uint16_t Pos);
 uint8_t _Cb_R_ModbusRTU_REG_CalibPoint_2(sData *str, uint16_t Pos);
 uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_2(sData *str, uint16_t Pos);
 
+uint8_t _Cb_R_ModbusRTU_REG_Mode_Config(sData *str, uint16_t Pos);
+uint8_t _Cb_W_ModbusRTU_REG_Mode_Config(sData *str, uint16_t Pos);
+
+uint8_t _Cb_R_ModbusRTU_REG_Mode_Level(sData *str, uint16_t Pos);
+uint8_t _Cb_W_ModbusRTU_REG_Mode_Level(sData *str, uint16_t Pos);
+
 //uint8_t _Cb_R_ModbusRTU_REG_Alarm_State(sData *str, uint16_t Pos);
 //uint8_t _Cb_W_ModbusRTU_REG_Alarm_State(sData *str, uint16_t Pos);
 //
@@ -57,6 +63,8 @@ struct_CheckList_Reg_Modbus_RTU sCheckList_Reg_Modbus_RTU[] =
       {_E_REGISTER_COMPENSATION,    0x0007,     2,        _Cb_R_ModbusRTU_REG_Compensation, _Cb_W_ModbusRTU_REG_Compensation},
       {_E_REGISTER_CALIBPOINT_1,    0x0009,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_1, _Cb_W_ModbusRTU_REG_CalibPoint_1},
       {_E_REGISTER_CALIBPOINT_2,    0x000B,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_2, _Cb_W_ModbusRTU_REG_CalibPoint_2},
+      {_E_REGISTER_MODE_CONFIG,     0x000D,     1,        _Cb_R_ModbusRTU_REG_Mode_Config,  _Cb_W_ModbusRTU_REG_Mode_Config},
+      {_E_REGISTER_MODE_LEVEL,      0x000E,     1,        _Cb_R_ModbusRTU_REG_Mode_Level,   _Cb_W_ModbusRTU_REG_Mode_Level},
 };
 static uint8_t aDATA_CONFIG[128];
 
@@ -94,7 +102,7 @@ uint8_t _Cb_W_ModbusRTU_REG_ID(sData *str, uint16_t Pos)
         sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
         sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
         
-        Save_InforSlaveModbusRTU( (uint8_t)ConvertData,sSlave_ModbusRTU.Baudrate);
+        Save_InforSlaveModbusRTU(sSlave_ModbusRTU.Mode_u8,(uint8_t)ConvertData,sSlave_ModbusRTU.Baudrate);
         return 1;
     }
     return 0;
@@ -118,7 +126,7 @@ uint8_t _Cb_W_ModbusRTU_REG_Baudrate(sData *str, uint16_t Pos)
     {
         sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
         sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
-        Save_InforSlaveModbusRTU( sSlave_ModbusRTU.ID, (uint8_t)ConvertData);
+        Save_InforSlaveModbusRTU(sSlave_ModbusRTU.Mode_u8, sSlave_ModbusRTU.ID, (uint8_t)ConvertData);
         return 1;
     }
     return 0;
@@ -286,6 +294,51 @@ uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_2(sData *str, uint16_t Pos)
     return 1;
 }
 
+uint8_t _Cb_R_ModbusRTU_REG_Mode_Config(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sModeConfig.Mode_u8;
+    return 1;
+}
+uint8_t _Cb_W_ModbusRTU_REG_Mode_Config(sData *str, uint16_t Pos)
+{
+    uint16_t ConvertData = 0;
+    uint8_t pos = 0;
+    pos = Pos;
+    ConvertData = str->Data_a8[pos] << 8 | str->Data_a8[pos+1]; 
+    if(ConvertData <= 1)
+    {
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
+        
+        Save_ModeConfig( (uint8_t)ConvertData, sModeConfig.Compensation_Level_u16);
+        return 1;
+    }
+    return 0;
+}
+
+uint8_t _Cb_R_ModbusRTU_REG_Mode_Level(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sModeConfig.Compensation_Level_u16 >> 8;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sModeConfig.Compensation_Level_u16;
+    return 1;
+}
+uint8_t _Cb_W_ModbusRTU_REG_Mode_Level(sData *str, uint16_t Pos)
+{
+    uint16_t ConvertData = 0;
+    uint8_t pos = 0;
+    pos = Pos;
+    ConvertData = str->Data_a8[pos] << 8 | str->Data_a8[pos+1]; 
+    if(ConvertData >= LEVEL_MIN && ConvertData <= LEVEL_MAX)
+    {
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
+        
+        Save_ModeConfig(sModeConfig.Mode_u8, ConvertData);
+        return 1;
+    }
+    return 0;
+}
 /*===================== Send Data RS485 ======================*/
 /*
     @brief Send 485 sensor
@@ -324,15 +377,17 @@ void Reset_sData(sData *str)
 	str->Length_u16 = 0;
 }
 /*======================= Function ID Slave =======================*/
-void Save_InforSlaveModbusRTU(uint8_t ID, uint8_t Baudrate)
+void Save_InforSlaveModbusRTU(uint8_t Mode, uint8_t ID, uint8_t Baudrate)
 {
 #ifdef USING_CHECK_MODBUS_RTU
     uint8_t aData[8] = {0};
     uint8_t length = 0;
     
+    sSlave_ModbusRTU.Mode_u8 = Mode,
     sSlave_ModbusRTU.ID = ID;
     sSlave_ModbusRTU.Baudrate = Baudrate;
     
+    aData[length++] = sSlave_ModbusRTU.Mode_u8;
     aData[length++] = sSlave_ModbusRTU.ID;
     aData[length++] = sSlave_ModbusRTU.Baudrate;
 
@@ -345,11 +400,13 @@ void Init_InforSlaveModbusRTU(void)
 #ifdef USING_CHECK_MODBUS_RTU
     if(*(__IO uint8_t*)(ADDR_INFOR_SLAVE_MODBUS_RTU) != FLASH_BYTE_EMPTY)
     {
-        sSlave_ModbusRTU.ID  = *(__IO uint8_t*)(ADDR_INFOR_SLAVE_MODBUS_RTU+2);
-        sSlave_ModbusRTU.Baudrate = *(__IO uint8_t*)(ADDR_INFOR_SLAVE_MODBUS_RTU+3);
+        sSlave_ModbusRTU.Mode_u8  = *(__IO uint8_t*)(ADDR_INFOR_SLAVE_MODBUS_RTU+2);
+        sSlave_ModbusRTU.ID       = *(__IO uint8_t*)(ADDR_INFOR_SLAVE_MODBUS_RTU+3);
+        sSlave_ModbusRTU.Baudrate = *(__IO uint8_t*)(ADDR_INFOR_SLAVE_MODBUS_RTU+4);
     }
     else
     {
+        sSlave_ModbusRTU.Mode_u8 = 0;
         sSlave_ModbusRTU.ID = ID_DEFAULT;
         sSlave_ModbusRTU.Baudrate = BAUDRATE_DEFAULT;
     }

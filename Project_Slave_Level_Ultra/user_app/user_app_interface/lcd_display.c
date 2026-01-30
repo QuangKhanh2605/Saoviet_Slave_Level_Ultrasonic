@@ -37,6 +37,10 @@ uint8_t aSTT_SETTING_WAIT[14]   = {"    Waiting   "};
 uint8_t aSTT_SETTING_DONE[14]   = {"     Done    "};
 uint8_t aSTT_SETTING_ERROR[14]  = {"     Error   "};
 
+
+uint8_t *aModeConfig[2] = {"Distance", "Level"};
+uint8_t *aModeInterface[2] = {"Modbus", "4_20mA"};
+
 sOjectInformation  sLCDObject[] = 
 {
 //          para          name                  value      dtype         scale   unit      row  col      screen
@@ -46,15 +50,20 @@ sOjectInformation  sLCDObject[] =
     {   __PASS_WORD_1,    "Enter Password",   NULL,   _DTYPE_STRING,   0,      NULL,      1,  28, 0x00,      _LCD_SCR_PASS    },
     {   __PASS_WORD_2,    NULL,               NULL,   _DTYPE_STRING,   0,      NULL,      2,  58, 0x00,      _LCD_SCR_PASS    },
     
-    {   __SCR_SET_TITLE,  "SETTING",          NULL,   _DTYPE_STRING,   0,      NULL,      0,   50, 0x00,      _LCD_SCR_SETTING },
-    {   __SCR_SET_MODBUS, "1.Modbus RTU",     NULL,   _DTYPE_STRING,   0,      NULL,      1,   18, 0x00,      _LCD_SCR_SETTING },
-    {   __SCR_SET_CALIB,  "2.Calibration",    NULL,   _DTYPE_STRING,   0,      NULL,      2,   18, 0x00,      _LCD_SCR_SETTING },
-    {   __SCR_SET_INFOR,  "3.Information",    NULL,   _DTYPE_STRING,   0,      NULL,      3,   18, 0x00,      _LCD_SCR_SETTING },
+    {   __SCR_SET_MODBUS, "1.Communication",     NULL,   _DTYPE_STRING,   0,      NULL,      0,   18, 0x00,      _LCD_SCR_SETTING },
+    {   __SCR_SET_MODE,   "2.Configure",      NULL,   _DTYPE_STRING,   0,      NULL,      1,   18, 0x00,      _LCD_SCR_SETTING },
+    {   __SCR_SET_CALIB,  "3.Calibration",    NULL,   _DTYPE_STRING,   0,      NULL,      2,   18, 0x00,      _LCD_SCR_SETTING },
+    {   __SCR_SET_INFOR,  "4.Information",    NULL,   _DTYPE_STRING,   0,      NULL,      3,   18, 0x00,      _LCD_SCR_SETTING },
     
-    {   __SET_MODBUS_TITLE,     "SET MODBUS RTU", NULL,   _DTYPE_STRING,   0,      NULL,      0,   28, 0x00,      _LCD_SCR_SET_MODBUS },
-    {   __SET_MODBUS_ID,        "1.ID      : ",   NULL,   _DTYPE_U8,       0x00,   NULL,      1,   4, 0x00,      _LCD_SCR_SET_MODBUS },
-    {   __SET_MODBUS_BR,        "2.Baudrate: ",   NULL,   _DTYPE_U32,      0x00,   NULL,      2,   4, 0x00,      _LCD_SCR_SET_MODBUS },
+    {   __SET_INTERFACE_TITLE,  "COMMUNICATION ", NULL,   _DTYPE_STRING,   0,      NULL,      0,   28, 0x00,       _LCD_SCR_SET_MODBUS },
+    {   __SET_INTERFACE_MODE,   "1.Mode     : ",   NULL,   _DTYPE_STRING,   0,      NULL,      1,   4,  0X00,       _LCD_SCR_SET_MODBUS },
+    {   __SET_MODBUS_ID,        "2.Modbus ID: ",   NULL,   _DTYPE_U8,       0x00,   NULL,      2,   4,  0x00,       _LCD_SCR_SET_MODBUS },
+    {   __SET_MODBUS_BR,        "3.Modbus BR: ",   NULL,   _DTYPE_U32,      0x00,   NULL,      3,   4,  0x00,       _LCD_SCR_SET_MODBUS },
     
+    {   __SET_CONFIG_TITLE,       "CONFIGURE MODE",  NULL,   _DTYPE_STRING,  0,      NULL,      0,   28, 0x00,      _LCD_SCR_SET_MODE},
+    {   __SET_CONFIG_MODE,        "1.Mode : ",       NULL,   _DTYPE_STRING,  0,      NULL,      1,   4, 0x00,      _LCD_SCR_SET_MODE},
+    {   __SET_CONFIG_LEVEL,       "2.Level: ",       NULL,   _DTYPE_U16,     0xFE,      " m",      2,   4, 0x00,      _LCD_SCR_SET_MODE},
+
     {   __SCR_CALIB_TAB_1_TITLE,      "CALIBRATION",    NULL,   _DTYPE_STRING,   0,      NULL,      0,   36, 0x00,      _LCD_SCR_SET_CALIB_TAB_1 },
     {   __SCR_CALIB_TAB_1_VALUE,      "Dist: ",         NULL,   _DTYPE_I32,   0xFE,      " m",      1,   4, 0x00,       _LCD_SCR_SET_CALIB_TAB_1 },
     {   __SCR_CALIB_TAB_1_VALUE_2,    "AD: ",           NULL,   _DTYPE_I32,   0x00,      NULL,      1,   85,0x00,       _LCD_SCR_SET_CALIB_TAB_1},
@@ -90,11 +99,17 @@ void Display_Init (void)
     glcd_write();	
     Deinit_LCD12864();
     
+    sParaDisplay.ptr_ModeConfig = &sModeConfig.Mode_u8;
+    sParaDisplay.ptr_ModeInterface = &sSlave_ModbusRTU.Mode_u8;
+      
     sLCDObject[__SC1_LEVEL].pData   = &sParaDisplay.Distance_i32; 
     sLCDObject[__SC1_CURR].pData    = &sParaDisplay.Current_i32;   
     
     sLCDObject[__SET_MODBUS_ID].pData  = &sParaDisplay.ID_u8; 
     sLCDObject[__SET_MODBUS_BR].pData  = &sParaDisplay.Baudrate_u32; 
+    
+//    sLCDObject[__SET_MODE_MODE].pData = &sModeConfig.Mode_u8;
+    sLCDObject[__SET_CONFIG_LEVEL].pData  = &sModeConfig.Compensation_Level_u16; 
     
     sLCDObject[__SCR_CALIB_TAB_1_VALUE].pData = &sParaDisplay.Distance_i32;
     sLCDObject[__SCR_CALIB_TAB_1_VALUE_2].pData = &sParaDisplay.Measure_AD;
@@ -325,6 +340,10 @@ static uint8_t _Cb_button_detect (uint8_t event)
 /*==========================Function LCD=======================*/
 void Update_ParaDisplay(void)
 {
+    sLCDObject[__SET_CONFIG_MODE].pData = aModeConfig[*sParaDisplay.ptr_ModeConfig];
+    
+    sLCDObject[__SET_INTERFACE_MODE].pData = aModeInterface[*sParaDisplay.ptr_ModeInterface];
+    
     sParaDisplay.ID_u8 = sSlave_ModbusRTU.ID;
     sParaDisplay.Baudrate_u32 = aBaudrate_value[sSlave_ModbusRTU.Baudrate];
     sParaDisplay.Distance_i32 = (int32_t)(sSensorLevel.LevelValueFilter_f );

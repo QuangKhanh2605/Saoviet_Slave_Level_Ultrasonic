@@ -47,14 +47,19 @@ typedef enum
     __PASS_WORD_1,
     __PASS_WORD_2,
     
-    __SCR_SET_TITLE,
     __SCR_SET_MODBUS,
+    __SCR_SET_MODE,
     __SCR_SET_CALIB,
     __SCR_SET_INFOR,
     
-    __SET_MODBUS_TITLE,
+    __SET_INTERFACE_TITLE,
+    __SET_INTERFACE_MODE,
     __SET_MODBUS_ID,
     __SET_MODBUS_BR,
+    
+    __SET_CONFIG_TITLE,
+    __SET_CONFIG_MODE,
+    __SET_CONFIG_LEVEL,
     
     __SCR_CALIB_TAB_1_TITLE,
     __SCR_CALIB_TAB_1_VALUE,
@@ -91,6 +96,7 @@ typedef enum
     
     _LCD_SCR_SETTING,
     _LCD_SCR_SET_MODBUS,
+    _LCD_SCR_SET_MODE,
     _LCD_SCR_SET_CALIB_TAB_1,
     _LCD_SCR_SET_CALIB_TAB_2,
     _LCD_SCR_SET_INFORMATION,
@@ -173,6 +179,8 @@ typedef struct
     int32_t     Calib_Offset;
     int32_t     Measure_AD;
     
+    uint8_t    *ptr_ModeConfig;
+    uint8_t    *ptr_ModeInterface;
 }sParameter_Display;
 
 extern sEvent_struct        sEventDisplay[];

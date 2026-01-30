@@ -134,7 +134,14 @@ void BUTTON_Enter_Process (void)
                 case __SCR_SET_MODBUS:
                     UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
                     Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODBUS, 0,
-                                       __SET_MODBUS_ID, __SET_MODBUS_ID, __SET_MODBUS_BR,
+                                       __SET_INTERFACE_MODE, __SET_INTERFACE_MODE, __SET_MODBUS_BR,
+                                       NULL, 0xF1);
+                    break;
+                    
+                case __SCR_SET_MODE:
+                    UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                    Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, 0,
+                                       __SET_CONFIG_MODE, __SET_CONFIG_MODE, __SET_CONFIG_LEVEL,
                                        NULL, 0xF1);
                     break;
                     
@@ -157,13 +164,38 @@ void BUTTON_Enter_Process (void)
         case _LCD_SCR_SET_MODBUS:
             switch (sLCD.sScreenNow.Para_u8)
             {
+                case __SET_INTERFACE_MODE:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODBUS, (sLCD.sScreenNow.SubIndex_u8+1),
+                                               __SET_INTERFACE_MODE, __SET_INTERFACE_MODE, __SET_MODBUS_BR,
+                                               &sButton.Old_value, 0xF2);
+                             sButton.Old_value = sSlave_ModbusRTU.Mode_u8;
+                             sParaDisplay.ptr_ModeInterface = (uint8_t *)&sButton.Old_value;
+                            break;
+                            
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_CHECK_SETTING, 0,
+                                               __CHECK_STATE_SETTING, __CHECK_STATE_SETTING, __CHECK_STATE_SETTING,
+                                               NULL, 0xF0);
+                            sParaDisplay.State_Setting = _STATE_SETTING_ENTER;
+                            break;
+                        
+                        default:
+                            break;
+                    }
+                    break;
+              
                 case __SET_MODBUS_ID:
                     switch(sLCD.sScreenNow.SubIndex_u8)
                     {
                         case 0:
                             UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
                             Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODBUS, (sLCD.sScreenNow.SubIndex_u8+1),
-                                               __SET_MODBUS_ID, __SET_MODBUS_ID, __SET_MODBUS_BR,
+                                               __SET_MODBUS_ID, __SET_INTERFACE_MODE, __SET_MODBUS_BR,
                                                &sButton.Old_value, 0xF2);
                              sButton.Old_value = sParaDisplay.ID_u8;
                             break;
@@ -187,9 +219,64 @@ void BUTTON_Enter_Process (void)
                         case 0:
                             UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
                             Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODBUS, (sLCD.sScreenNow.SubIndex_u8+1),
-                                               __SET_MODBUS_BR, __SET_MODBUS_BR, __SET_MODBUS_BR,
+                                               __SET_MODBUS_BR, __SET_INTERFACE_MODE, __SET_MODBUS_BR,
                                                &sButton.Old_value, 0xF2);
                              sButton.Old_value = sParaDisplay.Baudrate_u32;
+                            break;
+                            
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_CHECK_SETTING, 0,
+                                               __CHECK_STATE_SETTING, __CHECK_STATE_SETTING, __CHECK_STATE_SETTING,
+                                               NULL, 0xF0);
+                            sParaDisplay.State_Setting = _STATE_SETTING_ENTER;
+                            break;
+                        
+                        default:
+                            break;
+                    }
+                    break;
+                   
+            }
+            break;
+            
+        case _LCD_SCR_SET_MODE:
+            switch (sLCD.sScreenNow.Para_u8)
+            {
+                case __SET_CONFIG_MODE:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, (sLCD.sScreenNow.SubIndex_u8+1),
+                                               __SET_CONFIG_MODE, __SET_CONFIG_MODE, __SET_CONFIG_LEVEL,
+                                               &sButton.Old_value, 0xF2);
+                             sButton.Old_value = sModeConfig.Mode_u8;
+                             sParaDisplay.ptr_ModeConfig = (uint8_t *)&sButton.Old_value;
+                            break;
+                            
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_CHECK_SETTING, 0,
+                                               __CHECK_STATE_SETTING, __CHECK_STATE_SETTING, __CHECK_STATE_SETTING,
+                                               NULL, 0xF0);
+                            sParaDisplay.State_Setting = _STATE_SETTING_ENTER;
+                            break;
+                        
+                        default:
+                            break;
+                    }
+                    break;
+                    
+                case __SET_CONFIG_LEVEL:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, (sLCD.sScreenNow.SubIndex_u8+1),
+                                               __SET_CONFIG_LEVEL, __SET_CONFIG_MODE, __SET_CONFIG_LEVEL,
+                                               &sButton.Old_value, 0xF2);
+                             sButton.Old_value = sModeConfig.Compensation_Level_u16;
                             break;
                             
                         case 1:
@@ -313,8 +400,12 @@ void BUTTON_Enter_Process (void)
                 sParaDisplay.State_Setting = _STATE_SETTING_DONE;
                 switch (sLCD.sScreenBack.Para_u8)
                 {
+                    case __SET_INTERFACE_MODE:
+                      Save_InforSlaveModbusRTU((uint8_t)sButton.Old_value,sSlave_ModbusRTU.ID, sSlave_ModbusRTU.Baudrate);
+                      break;
+                  
                     case __SET_MODBUS_ID:
-                      Save_InforSlaveModbusRTU((uint8_t)sButton.Old_value, sSlave_ModbusRTU.Baudrate);
+                      Save_InforSlaveModbusRTU(sSlave_ModbusRTU.Mode_u8,(uint8_t)sButton.Old_value, sSlave_ModbusRTU.Baudrate);
                       break;
                       
                     case __SET_MODBUS_BR:
@@ -326,7 +417,24 @@ void BUTTON_Enter_Process (void)
                             break;
                         }
                       }
-                      Save_InforSlaveModbusRTU(sSlave_ModbusRTU.ID, sSlave_ModbusRTU.Baudrate);
+                      Save_InforSlaveModbusRTU(sSlave_ModbusRTU.Mode_u8,sSlave_ModbusRTU.ID, sSlave_ModbusRTU.Baudrate);
+                      break;
+                      
+                    default:
+                      break;
+                }
+                break;
+                
+              case _LCD_SCR_SET_MODE:
+                sParaDisplay.State_Setting = _STATE_SETTING_DONE;
+                switch (sLCD.sScreenBack.Para_u8)
+                {
+                    case __SET_CONFIG_MODE:
+                      Save_ModeConfig(sButton.Old_value, sModeConfig.Compensation_Level_u16);
+                      break;
+                      
+                    case __SET_CONFIG_LEVEL:
+                      Save_ModeConfig(sModeConfig.Mode_u8, sButton.Old_value);
                       break;
                       
                     default:
@@ -420,6 +528,24 @@ void BUTTON_Up_Process (void)
               {
                 switch (sLCD.sScreenNow.Para_u8)
                 {
+                    case __SET_INTERFACE_MODE:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value == 0)
+                                    sButton.Old_value = 1;
+                                else
+                                    sButton.Old_value = 0;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                  
                     case __SET_MODBUS_ID:
                         switch(sLCD.sScreenNow.SubIndex_u8)
                         {
@@ -454,6 +580,55 @@ void BUTTON_Up_Process (void)
                                         }
                                     }
                                 }
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                }
+            }
+            break;
+            
+        case _LCD_SCR_SET_MODE:
+              if(sLCD.sScreenNow.SubIndex_u8 == 0)
+              {
+                    if (sLCD.sScreenNow.Para_u8 > sLCD.sScreenNow.ParaMin_u8 ) {
+                        sLCD.sScreenNow.Para_u8--;
+                    }
+                    Display_Set_Screen_Flag(&sLCD.sScreenNow, NULL, 0xF1);
+              }
+              else
+              {
+                switch (sLCD.sScreenNow.Para_u8)
+                {
+                    case __SET_CONFIG_MODE:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value == 0)
+                                    sButton.Old_value = 1;
+                                else 
+                                    sButton.Old_value = 0;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                        
+                    case __SET_CONFIG_LEVEL:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value < LEVEL_MAX)
+                                    sButton.Old_value++;
                                 break;
                             
                             default:
@@ -593,6 +768,24 @@ void BUTTON_Down_Process (void)
               {
                 switch (sLCD.sScreenNow.Para_u8)
                 {
+                    case __SET_INTERFACE_MODE:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value == 0)
+                                    sButton.Old_value = 1;
+                                else
+                                    sButton.Old_value = 0;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                  
                     case __SET_MODBUS_ID:
                         switch(sLCD.sScreenNow.SubIndex_u8)
                         {
@@ -627,6 +820,55 @@ void BUTTON_Down_Process (void)
                                         }
                                     }
                                 }
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                }
+            }
+            break;
+            
+        case _LCD_SCR_SET_MODE:
+              if(sLCD.sScreenNow.SubIndex_u8 == 0)
+              {
+                    if (sLCD.sScreenNow.Para_u8 < sLCD.sScreenNow.ParaMax_u8) {
+                        sLCD.sScreenNow.Para_u8++;
+                    }
+                    Display_Set_Screen_Flag(&sLCD.sScreenNow, NULL, 0xF1);
+              }
+              else
+              {
+                switch (sLCD.sScreenNow.Para_u8)
+                {
+                    case __SET_CONFIG_MODE:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value == 0)
+                                    sButton.Old_value = 1;
+                                else 
+                                    sButton.Old_value = 0;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                        
+                    case __SET_CONFIG_LEVEL:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value > LEVEL_MIN)
+                                    sButton.Old_value--;
                                 break;
                             
                             default:
@@ -750,6 +992,29 @@ void BUTTON_ESC_Process (void)
         case _LCD_SCR_SET_MODBUS:   
           switch(sLCD.sScreenNow.Para_u8)
           {
+                case __SET_INTERFACE_MODE:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SETTING, 0,
+                                                __SCR_SET_MODBUS, __SCR_SET_MODBUS, __SCR_SET_INFOR,
+                                                NULL, 0xF1);
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            break;             
+                          
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODBUS, (sLCD.sScreenNow.SubIndex_u8-1),
+                                               __SET_INTERFACE_MODE, __SET_INTERFACE_MODE, __SET_MODBUS_BR,
+                                               &sModeConfig.Mode_u8, 0xF1);
+                            sParaDisplay.ptr_ModeInterface = &sSlave_ModbusRTU.Mode_u8;
+                            break;
+                            
+                        default:
+                            break;
+                    }
+                    break;
+            
                 case __SET_MODBUS_ID:
                     switch(sLCD.sScreenNow.SubIndex_u8)
                     {
@@ -763,7 +1028,7 @@ void BUTTON_ESC_Process (void)
                         case 1:
                             UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
                             Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODBUS, (sLCD.sScreenNow.SubIndex_u8-1),
-                                               __SET_MODBUS_ID, __SET_MODBUS_ID, __SET_MODBUS_BR,
+                                               __SET_MODBUS_ID, __SET_INTERFACE_MODE, __SET_MODBUS_BR,
                                                &sParaDisplay.ID_u8, 0xF1);
                             break;
                             
@@ -785,8 +1050,61 @@ void BUTTON_ESC_Process (void)
                         case 1:
                             UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
                             Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODBUS, (sLCD.sScreenNow.SubIndex_u8-1),
-                                               __SET_MODBUS_BR, __SET_MODBUS_ID, __SET_MODBUS_BR,
+                                               __SET_MODBUS_BR, __SET_INTERFACE_MODE, __SET_MODBUS_BR,
                                                &sParaDisplay.Baudrate_u32, 0xF1);
+                            break;
+                            
+                        default:
+                            break;
+                    }
+                    break;
+                
+              default:
+                break;
+          }
+          break;
+          
+        case _LCD_SCR_SET_MODE:   
+          switch(sLCD.sScreenNow.Para_u8)
+          {
+                case __SET_CONFIG_MODE:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SETTING, 0,
+                                                __SCR_SET_MODE, __SCR_SET_MODBUS, __SCR_SET_INFOR,
+                                                NULL, 0xF1);
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            break;             
+                          
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, (sLCD.sScreenNow.SubIndex_u8-1),
+                                               __SET_CONFIG_MODE, __SET_CONFIG_MODE, __SET_CONFIG_LEVEL,
+                                               &sModeConfig.Mode_u8, 0xF1);
+                            sParaDisplay.ptr_ModeConfig = &sModeConfig.Mode_u8;
+                            break;
+                            
+                        default:
+                            break;
+                    }
+                    break;
+                
+                case __SET_CONFIG_LEVEL:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SETTING, 0,
+                                                __SCR_SET_MODE, __SCR_SET_MODBUS, __SCR_SET_INFOR,
+                                                NULL, 0xF1);
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            break;         
+                          
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, (sLCD.sScreenNow.SubIndex_u8-1),
+                                               __SET_CONFIG_LEVEL, __SET_CONFIG_MODE, __SET_CONFIG_LEVEL,
+                                               &sModeConfig.Compensation_Level_u16, 0xF1);
                             break;
                             
                         default:

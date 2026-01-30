@@ -23,6 +23,9 @@ typedef enum
     _E_REGISTER_CALIBPOINT_1,
     _E_REGISTER_CALIBPOINT_2,
     
+    _E_REGISTER_MODE_CONFIG,
+    _E_REGISTER_MODE_LEVEL,
+    
     _E_REGISTER_END,
 }eRegister_ModbusRTU;
 
@@ -37,6 +40,7 @@ typedef struct {
 }struct_CheckList_Reg_Modbus_RTU;
 
 typedef struct {
+    uint8_t Mode_u8;
     uint8_t ID;
     uint8_t Baudrate;
 }struct_Slave_ModbusRTU;
@@ -47,7 +51,7 @@ extern sData   sFrameData_ModbusRTU;
 extern struct_Slave_ModbusRTU sSlave_ModbusRTU;
 extern uint32_t aBaudrate_value[11];
 /*====================Function Handle====================*/
-void Save_InforSlaveModbusRTU(uint8_t ID, uint8_t Baudrate);
+void Save_InforSlaveModbusRTU(uint8_t Mode, uint8_t ID, uint8_t Baudrate);
 void Init_InforSlaveModbusRTU(void);
 
 void Reset_sData(sData *str);

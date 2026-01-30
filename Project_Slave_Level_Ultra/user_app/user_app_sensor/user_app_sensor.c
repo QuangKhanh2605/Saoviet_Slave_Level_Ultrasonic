@@ -31,6 +31,7 @@ int32_t aSampling_VALUE[NUMBER_SAMPLING_SS] = {0};
 struct_SensorLevel  sSensorLevel = {0};
 struct_TempAlarm    sTempAlarm = {0};
 struct_CalibDAC     sCalibDAC = {0};
+struct_ModeConfig   sModeConfig = {0};
 
 extern sData sUart232;
 /*========================Function Handle========================*/
@@ -47,7 +48,7 @@ static uint8_t fevent_sensor_handle(uint8_t event)
     test_gettick = HAL_GetTick() - test_gettick_2;
     test_gettick_2 = HAL_GetTick();
     uint32_t TempU32 = 0;
-    if(sUart232.Data_a8[0] == 'R' && sUart232.Data_a8[4] == 0x0D)
+    if(sUart232.Data_a8[0] == 'R' && sUart232.Data_a8[END_RECV] == 0x0D)
     {
 //        uint8_t length = 0;
 //        for(uint8_t i = 1; i < sUart232.Length_u16; i++)
@@ -66,10 +67,18 @@ static uint8_t fevent_sensor_handle(uint8_t event)
 //    sSensorLevel.LevelValueFilter_f = Filter_pH(sSensorLevel.LevelValueReal_f);
     sSensorLevel.LevelValueFilter_f = ConvertTemperature_Calib(sSensorLevel.LevelValueReal_f);
     
-    if(sSensorLevel.LevelValueReal_f == 0)
+    if(sModeConfig.Mode_u8 == 1)
     {
-        fevent_enable(sEventAppSensor, _EVENT_DETECT_CONNECT);
+        if(sSensorLevel.LevelValueFilter_f <= sModeConfig.Compensation_Level_u16)
+        {
+            sSensorLevel.LevelValueFilter_f = (float)sModeConfig.Compensation_Level_u16 - sSensorLevel.LevelValueFilter_f;
+        }
+        else
+        {
+            sSensorLevel.LevelValueFilter_f = (float)sModeConfig.Compensation_Level_u16;
+        }
     }
+    
     Reset_Buff(&sUart232);
     fevent_enable(sEventAppSensor, _EVENT_DETECT_CONNECT);
 
@@ -522,13 +531,55 @@ void Init_CalibDAC(void)
     }
 #endif   
 }
+
+void       Save_ModeConfig(uint8_t Mode, uint16_t Level)
+{
+#ifdef USING_APP_SENSOR
+    uint8_t aData[50] = {0};
+    uint8_t length = 0;
+  
+    if(Mode <= 1 && (Level >= LEVEL_MIN && Level <= LEVEL_MAX))
+    {
+        sModeConfig.Mode_u8 = Mode;
+        sModeConfig.Compensation_Level_u16 = Level;
+        
+        aData[length++] = sModeConfig.Mode_u8 >> 8;
+        aData[length++] = sModeConfig.Mode_u8 ;
+        
+        aData[length++] = sModeConfig.Compensation_Level_u16 >> 8;
+        aData[length++] = sModeConfig.Compensation_Level_u16 ;
+
+        Save_Array(ADDR_MODE_CONFIGURE, aData, length);
+    }
+#endif  
+}
+
+void       Init_ModeConfig(void)
+{
+#ifdef USING_APP_SENSOR
+  
+    if(*(__IO uint8_t*)(ADDR_MODE_CONFIGURE) != FLASH_BYTE_EMPTY)
+    {
+        sModeConfig.Mode_u8  |= *(__IO uint8_t*)(ADDR_MODE_CONFIGURE+2)<< 8;
+        sModeConfig.Mode_u8  |= *(__IO uint8_t*)(ADDR_MODE_CONFIGURE+3);
+        
+        sModeConfig.Compensation_Level_u16  |= *(__IO uint8_t*)(ADDR_MODE_CONFIGURE+4)<< 8;
+        sModeConfig.Compensation_Level_u16  |= *(__IO uint8_t*)(ADDR_MODE_CONFIGURE+5);
+    }
+    else
+    {
+        sModeConfig.Mode_u8 = 0;
+        sModeConfig.Compensation_Level_u16 = LEVEL_MAX;
+    }
+#endif  
+}
 /*==================Handle Define AT command=================*/
 #ifdef USING_AT_CONFIG
 void AT_CMD_Reset_Slave(sData *str, uint16_t Pos)
 {
     uint8_t aTemp[60] = {0};   
     uint16_t length = 0;
-    Save_InforSlaveModbusRTU(ID_DEFAULT, BAUDRATE_DEFAULT);
+    Save_InforSlaveModbusRTU(sSlave_ModbusRTU.Mode_u8, ID_DEFAULT, BAUDRATE_DEFAULT);
       
     Insert_String_To_String(aTemp, &length, (uint8_t*)"Reset OK!\r\n",0 , 11);
 //	Modem_Respond(PortConfig, aTemp, length, 0);
@@ -582,7 +633,7 @@ void AT_CMD_Set_ID_Slave (sData *str_Receiv, uint16_t Pos)
         TempU32 = Convert_String_To_Dec(str_Receiv->Data_a8 , length);
         if(TempU32 <= 255 )
         {
-            Save_InforSlaveModbusRTU(TempU32, sSlave_ModbusRTU.Baudrate);
+            Save_InforSlaveModbusRTU(sSlave_ModbusRTU.Mode_u8, TempU32, sSlave_ModbusRTU.Baudrate);
             HAL_UART_Transmit(&uart_debug, (uint8_t*)"OK", 2, 1000);
         }
         else
@@ -622,7 +673,7 @@ void AT_CMD_Set_BR_Slave (sData *str_Receiv, uint16_t Pos)
         TempU32 = Convert_String_To_Dec(str_Receiv->Data_a8 , length);
         if(TempU32 <= 11 )
         {
-            Save_InforSlaveModbusRTU(sSlave_ModbusRTU.ID, TempU32);
+            Save_InforSlaveModbusRTU(sSlave_ModbusRTU.Mode_u8, sSlave_ModbusRTU.ID, TempU32);
             HAL_UART_Transmit(&uart_debug, (uint8_t*)"OK", 2, 1000);
         }
         else
@@ -811,6 +862,7 @@ void       Init_AppSensor(void)
     Init_CalibTemperature();
     Init_TempAlarm();
     Init_CalibDAC();
+    Init_ModeConfig();
 #ifdef USING_AT_CONFIG
     /* regis cb serial */
     CheckList_AT_CONFIG[_RESET_SLAVE].CallBack = AT_CMD_Reset_Slave;
