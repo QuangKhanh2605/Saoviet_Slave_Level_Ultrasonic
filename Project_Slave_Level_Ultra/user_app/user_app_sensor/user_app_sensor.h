@@ -8,7 +8,7 @@
 
 #define NUMBER_SAMPLING_SS      15
 
-#define KIND_SENSOR 6   // hoac 9
+#define KIND_SENSOR 9   // hoac 9
 
 #if (KIND_SENSOR == 6)
   #define LEVEL_MIN 50
@@ -89,6 +89,7 @@ extern sEvent_struct        sEventAppSensor[];
 extern struct_TempAlarm     sTempAlarm;
 extern struct_SensorLevel   sSensorLevel;
 extern struct_ModeConfig    sModeConfig;
+extern struct_CalibDAC      sCalibDAC;
 /*====================Function Handle====================*/
 
 uint8_t    AppSensor_Task(void);

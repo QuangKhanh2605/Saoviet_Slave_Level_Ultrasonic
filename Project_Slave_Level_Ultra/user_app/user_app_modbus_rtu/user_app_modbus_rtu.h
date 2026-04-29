@@ -26,6 +26,11 @@ typedef enum
     _E_REGISTER_MODE_CONFIG,
     _E_REGISTER_MODE_LEVEL,
     
+    _E_REGISTER_4_20_MODE,
+    _E_REGISTER_4_20_MIN,
+    _E_REGISTER_4_20_MAX,
+    _E_REGISTER_4_20_DAC,
+    
     _E_REGISTER_END,
 }eRegister_ModbusRTU;
 

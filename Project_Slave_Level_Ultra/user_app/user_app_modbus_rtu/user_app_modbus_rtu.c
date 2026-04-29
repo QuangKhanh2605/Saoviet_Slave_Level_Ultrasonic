@@ -1,6 +1,7 @@
 #include "user_app_modbus_rtu.h"
 #include "user_modbus_rtu.h"
 #include "user_convert_variable.h"
+#include "user_app_sensor.h"
 
 uint8_t NONE_Register_CallBack(sData *str, uint16_t Pos);
 
@@ -47,6 +48,18 @@ uint8_t _Cb_W_ModbusRTU_REG_Mode_Level(sData *str, uint16_t Pos);
 //uint8_t _Cb_R_ModbusRTU_REG_Alarm_Lower(sData *str, uint16_t Pos);
 //uint8_t _Cb_W_ModbusRTU_REG_Alarm_Lower(sData *str, uint16_t Pos);
 
+uint8_t _Cb_R_ModbusRTU_REG_4_20_Mode(sData *str, uint16_t Pos);
+uint8_t _Cb_W_ModbusRTU_REG_4_20_Mode(sData *str, uint16_t Pos);
+
+uint8_t _Cb_R_ModbusRTU_REG_4_20_Min(sData *str, uint16_t Pos);
+uint8_t _Cb_W_ModbusRTU_REG_4_20_Min(sData *str, uint16_t Pos);
+
+uint8_t _Cb_R_ModbusRTU_REG_4_20_Max(sData *str, uint16_t Pos);
+uint8_t _Cb_W_ModbusRTU_REG_4_20_Max(sData *str, uint16_t Pos);
+
+uint8_t _Cb_R_ModbusRTU_REG_4_20_DAC(sData *str, uint16_t Pos);
+uint8_t _Cb_W_ModbusRTU_REG_4_20_DAC(sData *str, uint16_t Pos);
+
 /*============================ Struct var ============================*/
 struct_CheckList_Reg_Modbus_RTU sCheckList_Reg_Modbus_RTU[] =
 {
@@ -65,6 +78,11 @@ struct_CheckList_Reg_Modbus_RTU sCheckList_Reg_Modbus_RTU[] =
       {_E_REGISTER_CALIBPOINT_2,    0x000B,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_2, _Cb_W_ModbusRTU_REG_CalibPoint_2},
       {_E_REGISTER_MODE_CONFIG,     0x000D,     1,        _Cb_R_ModbusRTU_REG_Mode_Config,  _Cb_W_ModbusRTU_REG_Mode_Config},
       {_E_REGISTER_MODE_LEVEL,      0x000E,     1,        _Cb_R_ModbusRTU_REG_Mode_Level,   _Cb_W_ModbusRTU_REG_Mode_Level},
+      
+      {_E_REGISTER_4_20_MODE,       0x1000,     1,        _Cb_R_ModbusRTU_REG_4_20_Mode,    _Cb_W_ModbusRTU_REG_4_20_Mode},
+      {_E_REGISTER_4_20_MIN,        0x1001,     1,        _Cb_R_ModbusRTU_REG_4_20_Min,     _Cb_W_ModbusRTU_REG_4_20_Min},
+      {_E_REGISTER_4_20_MAX,        0x1002,     1,        _Cb_R_ModbusRTU_REG_4_20_Max,     _Cb_W_ModbusRTU_REG_4_20_Max},
+      {_E_REGISTER_4_20_DAC,        0x1003,     1,        _Cb_R_ModbusRTU_REG_4_20_DAC,     _Cb_W_ModbusRTU_REG_4_20_DAC},
 };
 static uint8_t aDATA_CONFIG[128];
 
@@ -339,6 +357,100 @@ uint8_t _Cb_W_ModbusRTU_REG_Mode_Level(sData *str, uint16_t Pos)
     }
     return 0;
 }
+/*===================== Calib RS485==========================*/
+
+uint8_t _Cb_R_ModbusRTU_REG_4_20_Mode(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sCalibDAC.stateDAC_u8;
+    return 1;
+}
+uint8_t _Cb_W_ModbusRTU_REG_4_20_Mode(sData *str, uint16_t Pos)
+{
+    uint16_t ConvertData = 0;
+    uint8_t pos = 0;
+    pos = Pos;
+    ConvertData = str->Data_a8[pos] << 8 | str->Data_a8[pos+1]; 
+    if(ConvertData < 256 && ConvertData > 0)
+    {
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
+        
+        sCalibDAC.stateDAC_u8 = ConvertData;
+        return 1;
+    }
+    return 0;
+}
+
+uint8_t _Cb_R_ModbusRTU_REG_4_20_Min(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sCalibDAC.DAC_Min_u16;
+    return 1;
+}
+uint8_t _Cb_W_ModbusRTU_REG_4_20_Min(sData *str, uint16_t Pos)
+{
+    uint16_t ConvertData = 0;
+    uint8_t pos = 0;
+    pos = Pos;
+    ConvertData = str->Data_a8[pos] << 8 | str->Data_a8[pos+1]; 
+    if(ConvertData < 256 && ConvertData > 0)
+    {
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
+        
+        Save_CalibDAC((uint16_t)(ConvertData), sCalibDAC.DAC_Max_u16);
+        return 1;
+    }
+    return 0;
+}
+
+uint8_t _Cb_R_ModbusRTU_REG_4_20_Max(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sCalibDAC.DAC_Max_u16;
+    return 1;
+}
+uint8_t _Cb_W_ModbusRTU_REG_4_20_Max(sData *str, uint16_t Pos)
+{
+    uint16_t ConvertData = 0;
+    uint8_t pos = 0;
+    pos = Pos;
+    ConvertData = str->Data_a8[pos] << 8 | str->Data_a8[pos+1]; 
+    if(ConvertData < 256 && ConvertData > 0)
+    {
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
+        
+        Save_CalibDAC(sCalibDAC.DAC_Min_u16, (uint16_t)(ConvertData));
+        return 1;
+    }
+    return 0;
+}
+
+uint8_t _Cb_R_ModbusRTU_REG_4_20_DAC(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sCalibDAC.DAC_ATcmd_u16;
+    return 1;
+}
+uint8_t _Cb_W_ModbusRTU_REG_4_20_DAC(sData *str, uint16_t Pos)
+{
+    uint16_t ConvertData = 0;
+    uint8_t pos = 0;
+    pos = Pos;
+    ConvertData = str->Data_a8[pos] << 8 | str->Data_a8[pos+1]; 
+    if(ConvertData < 256 && ConvertData > 0)
+    {
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
+        
+        sCalibDAC.DAC_ATcmd_u16 = ConvertData;
+        return 1;
+    }
+    return 0;
+}
+
 /*===================== Send Data RS485 ======================*/
 /*
     @brief Send 485 sensor
