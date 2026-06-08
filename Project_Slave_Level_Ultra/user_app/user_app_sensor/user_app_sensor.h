@@ -8,7 +8,7 @@
 
 #define NUMBER_SAMPLING_SS      15
 
-#define KIND_SENSOR 9   // hoac 9
+#define KIND_SENSOR 6   // hoac 9
 
 #if (KIND_SENSOR == 6)
   #define LEVEL_MIN 50
@@ -32,6 +32,7 @@ typedef enum
 {
     _EVENT_SENSOR_ENTRY,
     _EVENT_SENSOR_HANDLE,
+    _EVENT_HANDLE_MEASURE,
     _EVENT_SENSOR_DAC,
     
     _EVENT_DETECT_CONNECT,
@@ -48,6 +49,20 @@ typedef enum
     _KIND_CALIB_POINT_1,
     _KIND_CALIB_POINT_2,
 }eKindCalibLevel;
+
+typedef enum
+{
+    _INVALID_MODE,
+    _VALIB_MODE,
+}eKindModeValid;
+
+typedef enum
+{
+    _E_P_ZERO,
+    _E_P_PLS1,
+    _E_P_PLS2,
+    _E_P_SLOPE,
+}eKindCalibPlus;
 
 typedef struct
 {
@@ -85,11 +100,29 @@ typedef struct
     uint16_t Compensation_Level_u16;
 }struct_ModeConfig;
 
+typedef struct
+{
+    uint8_t Mode;
+    float   pt_x;
+    float   pt_y;
+}Struct_Point_Calib;
+
+typedef struct
+{
+    float               var_x_f;
+    float               var_y_f;
+    Struct_Point_Calib  PZero;
+    Struct_Point_Calib  PPls1;
+    Struct_Point_Calib  PPls2;
+    Struct_Point_Calib  PSlope;
+}Struct_CalibPlus;
+
 extern sEvent_struct        sEventAppSensor[];
 extern struct_TempAlarm     sTempAlarm;
 extern struct_SensorLevel   sSensorLevel;
 extern struct_ModeConfig    sModeConfig;
 extern struct_CalibDAC      sCalibDAC;
+extern Struct_CalibPlus     sCalibPlus;
 /*====================Function Handle====================*/
 
 uint8_t    AppSensor_Task(void);
@@ -104,6 +137,9 @@ void       Init_TempAlarm(void);
 void       Save_CalibDAC(uint16_t DAC_Min, uint16_t DAC_Max);
 void       Init_CalibDAC(void);
 
+void       Save_CalibPlus(uint8_t Kind, uint8_t Mode, float pt_x, float pt_y);
+void       Init_CalibPlus(void);
+
 void       Save_ModeConfig(uint8_t Mode, uint16_t Level);
 void       Init_ModeConfig(void);
 
@@ -113,4 +149,6 @@ float      ConvertTemperature_Calib(float var);
 void       quickSort_Sampling(int32_t array_stt[],int32_t array_sampling[], uint8_t left, uint8_t right);
 float      quickSort_Sampling_Value(int32_t Value);
 
+float      Cal_Line_AandB(float var_x, float pt_Ax, float pt_Ay, float pt_Bx, float pt_By);
+float      Cal_CalibPlus(float var);
 #endif

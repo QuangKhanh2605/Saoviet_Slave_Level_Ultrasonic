@@ -27,3 +27,29 @@ thiết bị để tín hiệu 4-20mA xuất ra từ giá trị đo
 --------------------------------------------------------------------------------
 9. "at+currentout?"
 - 4.00 - 20.00 mA: Đọc giá trị dòng điện 
+
+================================================================================
+Các bước hiệu chuẩn 4 - 20mA
+Bước 1: Kiểm tra mode xuất tín hiệu 4-20mA
+- Sử dụng lệnh "at+statedac?" kiểm tra mode xuất tín hiệu 4-20mA
+- Nếu kết quả '0': gửi "at+statedac=1" để chuẩn sang mode xuất tín hiệu từ lệnh AT
+Bước 2: Hiệu chuẩn điểm 4mA
+- Sử dụng lệnh "at+valuedac?" đọc giá trị DAC đang xuất ra 4-20mA
+- Theo dõi màn hình máy chuẩn sử dụng lệnh "at+valuedac=" để điều chỉnh giá trị DAC 
+cho tới khi máy chuẩn đo được dòng 4mA
+- Gửi giá trị DAC(giá trị cho máy chuẩn được dòng 4mA) lệnh "at+setdacmin=" 
+Bước 3: Hiệu chuẩn điểm 20mA
+- Sử dụng lệnh "at+valuedac?" đọc giá trị DAC đang xuất ra 4-20mA
+- Theo dõi màn hình máy chuẩn sử dụng lệnh "at+valuedac=" để điều chỉnh giá trị DAC 
+cho tới khi máy chuẩn đo được dòng 20mA
+- Gửi giá trị DAC(giá trị cho máy chuẩn được dòng 20mA) lệnh "at+setdacmax=" 
+Bước 4: Chuyển về mode xuất tín hiệu từ kết quả đo
+- Sử dụng lệnh "at+statedac=0" chuyển sang mode xuất tín hiệu từ kết quả đo 
+
+=================================================================================
+Hiệu chuẩn 4 - mA qua modbus RTU (RS485)
+Register 0x1000: Thanh ghi kiểm tra mode xuất tín hiệu 4 - 20mA (Đọc/Viết Unsigned) 
+Register 0x1001: Thanh ghi đọc giá trị hiệu chuẩn Min 4 - 20mA (Đọc/Viết Unsigned) 
+Register 0x1002: Thanh ghi đọc giá trị hiệu chuẩn Max 4 - 20mA (Đọc/Viết Unsigned) 
+Register 0x1003: Thanh ghi đọc giá trị ADC xuất tín hiệu 4 - 20mA (Đọc/Viết Unsigned) 
+Sử dụng Modbus Poll thực hiện các bước tương đương hiệu chuẩn 4 - 20mA bằng lệnh AT

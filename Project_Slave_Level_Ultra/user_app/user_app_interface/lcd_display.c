@@ -1,6 +1,7 @@
 #include "lcd_display.h"
 #include "string.h"
 #include "tim.h"
+#include "math.h"
 
 
 static uint8_t _Cb_Display_Init (uint8_t event);
@@ -72,11 +73,19 @@ sOjectInformation  sLCDObject[] =
     {   __SCR_CALIB_TAB_1_POINT_1,    "1.P1: ",         NULL,   _DTYPE_I32,   0xFE,      " m",      2,   4, 0x00,       _LCD_SCR_SET_CALIB_TAB_1 },
     {   __SCR_CALIB_TAB_1_POINT_2,    "2.P2: ",         NULL,   _DTYPE_I32,   0xFE,      " m",      3,   4, 0x00,       _LCD_SCR_SET_CALIB_TAB_1 },
     
+    {   __SCR_CALIB_TAB_1_TITLE_PLS,      "CALIBRATION",    NULL,   _DTYPE_STRING,   0,      NULL,      0,   36, 0x00,      _LCD_SCR_SET_CALIB_TAB_1_PLS },
+    {   __SCR_CALIB_TAB_1_VALUE_PLS,      "Dist: ",         NULL,   _DTYPE_I32,   0xFE,      " m",      1,   4, 0x00,       _LCD_SCR_SET_CALIB_TAB_1_PLS },
+    {   __SCR_CALIB_TAB_1_VALUE_2_PLS,    "AD: ",           NULL,   _DTYPE_I32,   0x00,      NULL,      1,   85,0x00,       _LCD_SCR_SET_CALIB_TAB_1_PLS },
+    {   __SCR_CALIB_TAB_1_POINT_1_AD_PLS, "AD: ",           NULL,   _DTYPE_I32,   0x00,      NULL,      2,   85,0X00,       _LCD_SCR_SET_CALIB_TAB_1_PLS },
+    {   __SCR_CALIB_TAB_1_POINT_2_AD_PLS, "AD: ",           NULL,   _DTYPE_I32,   0x00,      NULL,      3,   85,0x00,       _LCD_SCR_SET_CALIB_TAB_1_PLS },
+    {   __SCR_CALIB_TAB_1_POINT_1_PLS,    "3.P3: ",         NULL,   _DTYPE_I32,   0xFE,      " m",      2,   4, 0x00,       _LCD_SCR_SET_CALIB_TAB_1_PLS },
+    {   __SCR_CALIB_TAB_1_POINT_2_PLS,    "4.P4: ",         NULL,   _DTYPE_I32,   0xFE,      " m",      3,   4, 0x00,       _LCD_SCR_SET_CALIB_TAB_1_PLS },
+    
     {   __SCR_CALIB_TAB_2_TITLE,      "CALIBRATION",    NULL,   _DTYPE_STRING,   0,      NULL,      0,   36, 0x00,      _LCD_SCR_SET_CALIB_TAB_2 },
     {   __SCR_CALIB_TAB_2_VALUE,      "Dist: ",         NULL,   _DTYPE_I32,   0xFE,      " m",      1,   4, 0x00,       _LCD_SCR_SET_CALIB_TAB_2 },
     {   __SCR_CALIB_TAB_2_VALUE_2,    "AD: ",           NULL,   _DTYPE_I32,   0x00,      NULL,      1,   85, 0x00,       _LCD_SCR_SET_CALIB_TAB_2},
-    {   __SCR_CALIB_TAB_2_OFFSET,     "3.Offset : ",    NULL,   _DTYPE_I32,   0xFE,      " m",      2,    4, 0x00,       _LCD_SCR_SET_CALIB_TAB_2 },
-    {   __SCR_CALIB_TAB_2_RESTORE,    "4.Restore  ",    NULL,   _DTYPE_STRING,   0,      NULL,      3,    4, 0x00,       _LCD_SCR_SET_CALIB_TAB_2 },
+    {   __SCR_CALIB_TAB_2_OFFSET,     "5.Offset : ",    NULL,   _DTYPE_I32,   0xFE,      " m",      2,    4, 0x00,       _LCD_SCR_SET_CALIB_TAB_2 },
+    {   __SCR_CALIB_TAB_2_RESTORE,    "6.Restore  ",    NULL,   _DTYPE_STRING,   0,      NULL,      3,    4, 0x00,       _LCD_SCR_SET_CALIB_TAB_2 },
     
     {   __SCR_INFOR_FW_VERSION_1,     "*Version",       NULL,   _DTYPE_STRING,   0,      NULL,      0,   28, 0x00,      _LCD_SCR_SET_INFORMATION },
     {   __SCR_INFOR_FW_VERSION_2,           NULL,       NULL,   _DTYPE_STRING,   0,      NULL,      1,    4, 0x00,       _LCD_SCR_SET_INFORMATION },
@@ -117,9 +126,19 @@ void Display_Init (void)
     sLCDObject[__SCR_CALIB_TAB_1_POINT_1_AD].pData = &sParaDisplay.AD_Point1;
     sLCDObject[__SCR_CALIB_TAB_1_POINT_2].pData = &sParaDisplay.Calib_Point2;
     sLCDObject[__SCR_CALIB_TAB_1_POINT_2_AD].pData = &sParaDisplay.AD_Point2;
+    
+    sLCDObject[__SCR_CALIB_TAB_1_VALUE_PLS].pData = &sParaDisplay.Distance_i32;
+    sLCDObject[__SCR_CALIB_TAB_1_VALUE_2_PLS].pData = &sParaDisplay.Measure_AD;
+    sLCDObject[__SCR_CALIB_TAB_1_POINT_1_PLS].pData = &sParaDisplay.Calib_P1_Pls_i32;
+    sLCDObject[__SCR_CALIB_TAB_1_POINT_1_AD_PLS].pData = &sParaDisplay.AD_P1_Pls_i32;
+    sLCDObject[__SCR_CALIB_TAB_1_POINT_2_PLS].pData = &sParaDisplay.Calib_P2_Pls_i32;
+    sLCDObject[__SCR_CALIB_TAB_1_POINT_2_AD_PLS].pData = &sParaDisplay.AD_P2_Pls_i32;
+    
     sLCDObject[__SCR_CALIB_TAB_2_VALUE].pData = &sParaDisplay.Distance_i32;
     sLCDObject[__SCR_CALIB_TAB_2_VALUE_2].pData = &sParaDisplay.Measure_AD;
     sLCDObject[__SCR_CALIB_TAB_2_OFFSET].pData = &sParaDisplay.Calib_Offset;
+    
+
     
     sLCDObject[__SCR_INFOR_FW_VERSION_2].pData   = sFirmVersion.Data_a8;
     sLCDObject[__SCR_INFOR_MODEL_2].pData   = sModelVersion.Data_a8;
@@ -346,15 +365,23 @@ void Update_ParaDisplay(void)
     
     sParaDisplay.ID_u8 = sSlave_ModbusRTU.ID;
     sParaDisplay.Baudrate_u32 = aBaudrate_value[sSlave_ModbusRTU.Baudrate];
-    sParaDisplay.Distance_i32 = (int32_t)(sSensorLevel.LevelValueFilter_f );
+    sParaDisplay.Distance_i32 = (int32_t)(roundf(sSensorLevel.LevelValueFilter_f));
     sParaDisplay.Current_i32  = (int32_t)(sSensorLevel.CurrOutValue_f *100);
     
-    sParaDisplay.Calib_Point1 = (int32_t)(sSensorLevel.CalibPoint1_y_f);
-    sParaDisplay.AD_Point1    = (int32_t)(sSensorLevel.CalibPoint1_x_f);
-    sParaDisplay.Calib_Point2 = (int32_t)(sSensorLevel.CalibPoint2_y_f);
-    sParaDisplay.AD_Point2    = (int32_t)(sSensorLevel.CalibPoint2_x_f);
-    sParaDisplay.Calib_Offset = (int32_t)(sSensorLevel.Calib_Offset);
-    sParaDisplay.Measure_AD   = (int32_t)(sSensorLevel.LevelValueReal_f);
+    sParaDisplay.Calib_Point1 = (int32_t)(roundf(sCalibPlus.PZero.pt_y));
+    sParaDisplay.AD_Point1    = (int32_t)(roundf(sCalibPlus.PZero.pt_x));
+    sParaDisplay.Calib_Point2 = (int32_t)(roundf(sCalibPlus.PSlope.pt_y));
+    sParaDisplay.AD_Point2    = (int32_t)(roundf(sCalibPlus.PSlope.pt_x));
+    
+    sParaDisplay.Calib_P1_Pls_i32   = (int32_t)(roundf(sCalibPlus.PPls1.pt_y));
+    sParaDisplay.AD_P1_Pls_i32      = (int32_t)(roundf(sCalibPlus.PPls1.pt_x));
+    sParaDisplay.Calib_P2_Pls_i32   = (int32_t)(roundf(sCalibPlus.PPls2.pt_y));
+    sParaDisplay.AD_P2_Pls_i32      = (int32_t)(roundf(sCalibPlus.PPls2.pt_x));
+    
+    sParaDisplay.Calib_Offset = (int32_t)(roundf(sSensorLevel.Calib_Offset));
+    sParaDisplay.Measure_AD   = (int32_t)(roundf(sCalibPlus.var_x_f));
+    
+
 }
 
 void Display_Show_Oject (uint8_t object)

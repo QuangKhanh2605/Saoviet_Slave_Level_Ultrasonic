@@ -20,7 +20,7 @@
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
     </StLinkDriver>
     <DebugChecksum>
-        <Checksum>964767109</Checksum>
+        <Checksum>1411998268</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -65,6 +65,9 @@
         <Fmt5>struct_CalibDAC-stateDAC_u8	3	0</Fmt5>
         <Fmt6>struct_ModeConfig-Mode_u8	3	0</Fmt6>
     </struct_types>
+    <watch_formats>
+        <Fmt0>{W}42:test_x	3	0</Fmt0>
+    </watch_formats>
     <Trace2>
         <Enabled>0</Enabled>
         <ShowSource>0</ShowSource>

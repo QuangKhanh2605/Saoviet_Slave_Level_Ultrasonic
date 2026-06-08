@@ -69,6 +69,14 @@ typedef enum
     __SCR_CALIB_TAB_1_POINT_1,
     __SCR_CALIB_TAB_1_POINT_2,
     
+    __SCR_CALIB_TAB_1_TITLE_PLS,
+    __SCR_CALIB_TAB_1_VALUE_PLS,
+    __SCR_CALIB_TAB_1_VALUE_2_PLS,
+    __SCR_CALIB_TAB_1_POINT_1_AD_PLS,
+    __SCR_CALIB_TAB_1_POINT_2_AD_PLS,
+    __SCR_CALIB_TAB_1_POINT_1_PLS,
+    __SCR_CALIB_TAB_1_POINT_2_PLS,
+    
     
     __SCR_CALIB_TAB_2_TITLE,
     __SCR_CALIB_TAB_2_VALUE,
@@ -98,6 +106,7 @@ typedef enum
     _LCD_SCR_SET_MODBUS,
     _LCD_SCR_SET_MODE,
     _LCD_SCR_SET_CALIB_TAB_1,
+    _LCD_SCR_SET_CALIB_TAB_1_PLS,
     _LCD_SCR_SET_CALIB_TAB_2,
     _LCD_SCR_SET_INFORMATION,
     
@@ -181,6 +190,11 @@ typedef struct
     
     uint8_t    *ptr_ModeConfig;
     uint8_t    *ptr_ModeInterface;
+    
+    int32_t     Calib_P1_Pls_i32;
+    int32_t     AD_P1_Pls_i32;
+    int32_t     Calib_P2_Pls_i32;
+    int32_t     AD_P2_Pls_i32;
 }sParameter_Display;
 
 extern sEvent_struct        sEventDisplay[];

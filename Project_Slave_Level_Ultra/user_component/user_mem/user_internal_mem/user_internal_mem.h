@@ -63,6 +63,7 @@
     #define ADDR_TEMPERATURE_ALARM      0x08021000
     #define ADDR_CALIB_DAC              0x08021800
     #define ADDR_MODE_CONFIGURE         0x08022000
+    #define ADDR_SAVE_CALIB_PLUS        0x08022800
 
     #define	FLASH_MAX_MESS_TSVH_SAVE	0
     #define	FLASH_MAX_MESS_EVENT_SAVE   0

@@ -351,6 +351,62 @@ void BUTTON_Enter_Process (void)
             }
             break;
             
+        case _LCD_SCR_SET_CALIB_TAB_1_PLS:
+            switch (sLCD.sScreenNow.Para_u8)
+            {
+                case __SCR_CALIB_TAB_1_POINT_1_PLS:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_CALIB_TAB_1_PLS, (sLCD.sScreenNow.SubIndex_u8+1),
+                                               __SCR_CALIB_TAB_1_POINT_1_PLS, __SCR_CALIB_TAB_1_POINT_1_PLS, __SCR_CALIB_TAB_1_POINT_2_PLS,
+                                               &sButton.Old_value, 0xF2);
+                            sButton.Old_value = sParaDisplay.Calib_P1_Pls_i32;
+                            break;
+                            
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_CHECK_SETTING, 0,
+                                               __CHECK_STATE_SETTING, __CHECK_STATE_SETTING, __CHECK_STATE_SETTING,
+                                               NULL, 0xF0);
+                            sParaDisplay.State_Setting = _STATE_SETTING_ENTER;
+                            break;
+                        
+                        default:
+                            break;
+                    }
+                    break;
+                    
+                case __SCR_CALIB_TAB_1_POINT_2_PLS:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_CALIB_TAB_1_PLS, (sLCD.sScreenNow.SubIndex_u8+1),
+                                               __SCR_CALIB_TAB_1_POINT_2_PLS, __SCR_CALIB_TAB_1_POINT_1_PLS, __SCR_CALIB_TAB_1_POINT_2_PLS,
+                                               &sButton.Old_value, 0xF2);
+                            sButton.Old_value = sParaDisplay.Calib_P2_Pls_i32;
+                            break;
+                            
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_CHECK_SETTING, 0,
+                                               __CHECK_STATE_SETTING, __CHECK_STATE_SETTING, __CHECK_STATE_SETTING,
+                                               NULL, 0xF0);
+                            sParaDisplay.State_Setting = _STATE_SETTING_ENTER;
+                            break;
+                        
+                        default:
+                            break;
+                    }
+                    break;
+                    
+                default:
+                  break;
+            }
+            break;
+            
         case _LCD_SCR_SET_CALIB_TAB_2:
             switch (sLCD.sScreenNow.Para_u8)
             {
@@ -447,11 +503,32 @@ void BUTTON_Enter_Process (void)
                 switch (sLCD.sScreenBack.Para_u8)
                 {
                     case __SCR_CALIB_TAB_1_POINT_1:
-                      Save_CalibTemperature(_KIND_CALIB_POINT_1, (float)sButton.Old_value);
+//                      Save_CalibTemperature(_KIND_CALIB_POINT_1, (float)sButton.Old_value);
+                      Save_CalibPlus(_E_P_ZERO, 1, sCalibPlus.var_x_f, (float)sButton.Old_value);
                       break;
                       
                     case __SCR_CALIB_TAB_1_POINT_2:
-                      Save_CalibTemperature(_KIND_CALIB_POINT_2, (float)sButton.Old_value);
+//                      Save_CalibTemperature(_KIND_CALIB_POINT_2, (float)sButton.Old_value);
+                      Save_CalibPlus(_E_P_SLOPE, 1, sCalibPlus.var_x_f, (float)sButton.Old_value);
+                      break;
+                      
+                    default:
+                      break;
+                }
+                break;
+                
+              case _LCD_SCR_SET_CALIB_TAB_1_PLS:
+                sParaDisplay.State_Setting = _STATE_SETTING_DONE;
+                switch (sLCD.sScreenBack.Para_u8)
+                {
+                    case __SCR_CALIB_TAB_1_POINT_1_PLS:
+//                      Save_CalibTemperature(_KIND_CALIB_POINT_1, (float)sButton.Old_value);
+                      Save_CalibPlus(_E_P_PLS1, 1, sCalibPlus.var_x_f,(float)sButton.Old_value);
+                      break;
+                      
+                    case __SCR_CALIB_TAB_1_POINT_2_PLS:
+//                      Save_CalibTemperature(_KIND_CALIB_POINT_2, (float)sButton.Old_value);
+                      Save_CalibPlus(_E_P_PLS2, 1, sCalibPlus.var_x_f,(float)sButton.Old_value);
                       break;
                       
                     default:
@@ -479,6 +556,11 @@ void BUTTON_Enter_Process (void)
                         sTempAlarm.State = 0;
                         sTempAlarm.Alarm_Upper = LEVEL_MAX;
                         sTempAlarm.Alarm_Lower = LEVEL_MIN;
+                        
+                        Save_CalibPlus(_E_P_ZERO, 1, LEVEL_MIN, LEVEL_MIN);
+                        Save_CalibPlus(_E_P_PLS1, 0, 0, 0);
+                        Save_CalibPlus(_E_P_PLS2, 0, 0, 0);
+                        Save_CalibPlus(_E_P_SLOPE, 1, LEVEL_MAX, LEVEL_MAX);
                       break;
                       
                     default:
@@ -689,7 +771,7 @@ void BUTTON_Up_Process (void)
             }
             break;
             
-        case _LCD_SCR_SET_CALIB_TAB_2:
+        case _LCD_SCR_SET_CALIB_TAB_1_PLS:
               if(sLCD.sScreenNow.SubIndex_u8 == 0)
               {
                     if (sLCD.sScreenNow.Para_u8 > sLCD.sScreenNow.ParaMin_u8 ) {
@@ -698,6 +780,60 @@ void BUTTON_Up_Process (void)
                     } else {
                         Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_CALIB_TAB_1, 0,
                                                __SCR_CALIB_TAB_1_POINT_2, __SCR_CALIB_TAB_1_POINT_1, __SCR_CALIB_TAB_1_POINT_2,
+                                               NULL, 0xF1);
+                    }
+              }
+              else
+              {
+                switch (sLCD.sScreenNow.Para_u8)
+                {
+                    case __SCR_CALIB_TAB_1_POINT_1_PLS:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value < LEVEL_MAX)
+                                    sButton.Old_value++;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                        
+                    case __SCR_CALIB_TAB_1_POINT_2_PLS:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value < LEVEL_MAX)
+                                    sButton.Old_value++;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                        
+                    default:
+                      break;
+                }
+            }
+            break;
+            
+        case _LCD_SCR_SET_CALIB_TAB_2:
+              if(sLCD.sScreenNow.SubIndex_u8 == 0)
+              {
+                    if (sLCD.sScreenNow.Para_u8 > sLCD.sScreenNow.ParaMin_u8 ) {
+                        sLCD.sScreenNow.Para_u8--;
+                        Display_Set_Screen_Flag(&sLCD.sScreenNow, NULL, 0xF1);
+                    } else {
+                        Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_CALIB_TAB_1_PLS, 0,
+                                               __SCR_CALIB_TAB_1_POINT_2_PLS, __SCR_CALIB_TAB_1_POINT_1_PLS, __SCR_CALIB_TAB_1_POINT_2_PLS,
                                                NULL, 0xF1);
                     }
               }
@@ -883,9 +1019,9 @@ void BUTTON_Down_Process (void)
               if(sLCD.sScreenNow.SubIndex_u8 == 0)
               {
                     if (sLCD.sScreenNow.Para_u8 == sLCD.sScreenNow.ParaMax_u8) {
-                        Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_CALIB_TAB_2, 0,
-                                            __SCR_CALIB_TAB_2_OFFSET, __SCR_CALIB_TAB_2_OFFSET, __SCR_CALIB_TAB_2_RESTORE,
-                                            NULL, 0xF1);
+                        Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_CALIB_TAB_1_PLS, 0,
+                                               __SCR_CALIB_TAB_1_POINT_1_PLS, __SCR_CALIB_TAB_1_POINT_1_PLS, __SCR_CALIB_TAB_1_POINT_2_PLS,
+                                               NULL, 0xF1);
                     } else {
                         sLCD.sScreenNow.Para_u8++;
                         Display_Set_Screen_Flag(&sLCD.sScreenNow, NULL, 0xF1);
@@ -912,6 +1048,60 @@ void BUTTON_Down_Process (void)
                         break;
                         
                     case __SCR_CALIB_TAB_1_POINT_2:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value > LEVEL_MIN)
+                                    sButton.Old_value--;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                        
+                    default:
+                      break;
+                }
+            }
+            break;
+            
+        case _LCD_SCR_SET_CALIB_TAB_1_PLS:
+              if(sLCD.sScreenNow.SubIndex_u8 == 0)
+              {
+                    if (sLCD.sScreenNow.Para_u8 == sLCD.sScreenNow.ParaMax_u8) {
+                        Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_CALIB_TAB_2, 0,
+                                            __SCR_CALIB_TAB_2_OFFSET, __SCR_CALIB_TAB_2_OFFSET, __SCR_CALIB_TAB_2_RESTORE,
+                                            NULL, 0xF1);
+                    } else {
+                        sLCD.sScreenNow.Para_u8++;
+                        Display_Set_Screen_Flag(&sLCD.sScreenNow, NULL, 0xF1);
+                    }
+              }
+              else
+              {
+                switch (sLCD.sScreenNow.Para_u8)
+                {
+                    case __SCR_CALIB_TAB_1_POINT_1_PLS:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value > LEVEL_MIN)
+                                    sButton.Old_value--;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                        
+                    case __SCR_CALIB_TAB_1_POINT_2_PLS:
                         switch(sLCD.sScreenNow.SubIndex_u8)
                         {
                             case 0:
@@ -1168,6 +1358,59 @@ void BUTTON_ESC_Process (void)
                 break;
           }
           break;
+          
+        case _LCD_SCR_SET_CALIB_TAB_1_PLS:
+          switch(sLCD.sScreenNow.Para_u8)
+          {
+            case __SCR_CALIB_TAB_1_POINT_1_PLS:
+                switch(sLCD.sScreenNow.SubIndex_u8)
+                {
+                    case 0:
+                        Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SETTING, 0,
+                                            __SCR_SET_CALIB, __SCR_SET_MODBUS, __SCR_SET_INFOR,
+                                            NULL, 0xF1);
+                        UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                        break;
+                      
+                    case 1:
+                        UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                        Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_CALIB_TAB_1_PLS, (sLCD.sScreenNow.SubIndex_u8-1),
+                                           __SCR_CALIB_TAB_1_POINT_1_PLS, __SCR_CALIB_TAB_1_POINT_1_PLS, __SCR_CALIB_TAB_1_POINT_2_PLS,
+                                           &sParaDisplay.Calib_P1_Pls_i32, 0xF1);
+                        break;
+                        
+                    default:
+                        break;
+                }
+                break;
+                
+            case __SCR_CALIB_TAB_1_POINT_2_PLS:
+                switch(sLCD.sScreenNow.SubIndex_u8)
+                {
+                    case 0:
+                        Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SETTING, 0,
+                                            __SCR_SET_CALIB, __SCR_SET_MODBUS, __SCR_SET_INFOR,
+                                            NULL, 0xF1);
+                        UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                        break;
+                      
+                    case 1:
+                        UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                        Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_CALIB_TAB_1_PLS, (sLCD.sScreenNow.SubIndex_u8-1),
+                                           __SCR_CALIB_TAB_1_POINT_2_PLS, __SCR_CALIB_TAB_1_POINT_1_PLS, __SCR_CALIB_TAB_1_POINT_2_PLS,
+                                           &sParaDisplay.AD_P2_Pls_i32, 0xF1);
+                        break;
+                        
+                    default:
+                        break;
+                }
+                break;
+                
+              default:
+                break;
+          }
+          break;
+
           
         case _LCD_SCR_SET_CALIB_TAB_2:
           switch(sLCD.sScreenNow.Para_u8)

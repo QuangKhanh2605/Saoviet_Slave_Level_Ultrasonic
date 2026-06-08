@@ -33,6 +33,12 @@ uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_1(sData *str, uint16_t Pos);
 uint8_t _Cb_R_ModbusRTU_REG_CalibPoint_2(sData *str, uint16_t Pos);
 uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_2(sData *str, uint16_t Pos);
 
+uint8_t _Cb_R_ModbusRTU_REG_CalibPoint_3(sData *str, uint16_t Pos);
+uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_3(sData *str, uint16_t Pos);
+
+uint8_t _Cb_R_ModbusRTU_REG_CalibPoint_4(sData *str, uint16_t Pos);
+uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_4(sData *str, uint16_t Pos);
+
 uint8_t _Cb_R_ModbusRTU_REG_Mode_Config(sData *str, uint16_t Pos);
 uint8_t _Cb_W_ModbusRTU_REG_Mode_Config(sData *str, uint16_t Pos);
 
@@ -76,8 +82,11 @@ struct_CheckList_Reg_Modbus_RTU sCheckList_Reg_Modbus_RTU[] =
       {_E_REGISTER_COMPENSATION,    0x0007,     2,        _Cb_R_ModbusRTU_REG_Compensation, _Cb_W_ModbusRTU_REG_Compensation},
       {_E_REGISTER_CALIBPOINT_1,    0x0009,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_1, _Cb_W_ModbusRTU_REG_CalibPoint_1},
       {_E_REGISTER_CALIBPOINT_2,    0x000B,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_2, _Cb_W_ModbusRTU_REG_CalibPoint_2},
-      {_E_REGISTER_MODE_CONFIG,     0x000D,     1,        _Cb_R_ModbusRTU_REG_Mode_Config,  _Cb_W_ModbusRTU_REG_Mode_Config},
-      {_E_REGISTER_MODE_LEVEL,      0x000E,     1,        _Cb_R_ModbusRTU_REG_Mode_Level,   _Cb_W_ModbusRTU_REG_Mode_Level},
+      {_E_REGISTER_CALIBPOINT_3,    0x000D,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_3, _Cb_W_ModbusRTU_REG_CalibPoint_3},
+      {_E_REGISTER_CALIBPOINT_4,    0x000F,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_4, _Cb_W_ModbusRTU_REG_CalibPoint_4},
+      
+      {_E_REGISTER_MODE_CONFIG,     0x0011,     1,        _Cb_R_ModbusRTU_REG_Mode_Config,  _Cb_W_ModbusRTU_REG_Mode_Config},
+      {_E_REGISTER_MODE_LEVEL,      0x0012,     1,        _Cb_R_ModbusRTU_REG_Mode_Level,   _Cb_W_ModbusRTU_REG_Mode_Level},
       
       {_E_REGISTER_4_20_MODE,       0x1000,     1,        _Cb_R_ModbusRTU_REG_4_20_Mode,    _Cb_W_ModbusRTU_REG_4_20_Mode},
       {_E_REGISTER_4_20_MIN,        0x1001,     1,        _Cb_R_ModbusRTU_REG_4_20_Min,     _Cb_W_ModbusRTU_REG_4_20_Min},
@@ -258,7 +267,7 @@ uint8_t _Cb_W_ModbusRTU_REG_Compensation(sData *str, uint16_t Pos)
 uint8_t _Cb_R_ModbusRTU_REG_CalibPoint_1(sData *str, uint16_t Pos)
 {
     uint32_t hexValue = 0;
-    hexValue = Handle_Float_To_hexUint32(sSensorLevel.CalibPoint1_y_f);
+    hexValue = Handle_Float_To_hexUint32(sCalibPlus.PZero.pt_y);
     sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 8;
     sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue;
     sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 24;
@@ -279,7 +288,9 @@ uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_1(sData *str, uint16_t Pos)
     sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+3];
     
     Convert_uint32Hex_To_Float(ConvertData, &Convert_F);
-    Save_CalibTemperature(_KIND_CALIB_POINT_1, Convert_F);
+
+//    Save_CalibTemperature(_KIND_CALIB_POINT_1, Convert_F);
+    Save_CalibPlus(_E_P_ZERO, 1, sCalibPlus.var_x_f, Convert_F);
     return 1;
 }
 
@@ -287,7 +298,7 @@ uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_1(sData *str, uint16_t Pos)
 uint8_t _Cb_R_ModbusRTU_REG_CalibPoint_2(sData *str, uint16_t Pos)
 {
     uint32_t hexValue = 0;
-    hexValue = Handle_Float_To_hexUint32(sSensorLevel.CalibPoint2_y_f);
+    hexValue = Handle_Float_To_hexUint32(sCalibPlus.PPls1.pt_y);
     sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 8;
     sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue;
     sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 24;
@@ -308,7 +319,68 @@ uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_2(sData *str, uint16_t Pos)
     sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+3];
     
     Convert_uint32Hex_To_Float(ConvertData, &Convert_F);
-    Save_CalibTemperature(_KIND_CALIB_POINT_2, Convert_F);
+//    Save_CalibTemperature(_KIND_CALIB_POINT_2, Convert_F);
+    Save_CalibPlus(_E_P_PLS1, 1, sCalibPlus.var_x_f, Convert_F);
+    return 1;
+}
+
+/*----------- _E_REGISTER_TEMP_CALIBPOINT_3 -----------*/
+uint8_t _Cb_R_ModbusRTU_REG_CalibPoint_3(sData *str, uint16_t Pos)
+{
+    uint32_t hexValue = 0;
+    hexValue = Handle_Float_To_hexUint32(sCalibPlus.PPls2.pt_y);
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 8;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 24;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 16;
+    return 1;
+}
+uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_3(sData *str, uint16_t Pos)
+{
+    uint32_t ConvertData = 0;
+    float Convert_F = 0;
+    uint8_t pos = 0;
+    pos = Pos;
+    ConvertData = str->Data_a8[pos+2]<<8 | str->Data_a8[pos+3];
+    ConvertData = (ConvertData << 16) | (str->Data_a8[pos]<<8 | str->Data_a8[pos+1]);
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+2];
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+3];
+    
+    Convert_uint32Hex_To_Float(ConvertData, &Convert_F);
+//    Save_CalibTemperature(_KIND_CALIB_POINT_2, Convert_F);
+    Save_CalibPlus(_E_P_PLS2, 1, sCalibPlus.var_x_f, Convert_F);
+    return 1;
+}
+
+/*----------- _E_REGISTER_TEMP_CALIBPOINT_4 -----------*/
+uint8_t _Cb_R_ModbusRTU_REG_CalibPoint_4(sData *str, uint16_t Pos)
+{
+    uint32_t hexValue = 0;
+    hexValue = Handle_Float_To_hexUint32(sCalibPlus.PSlope.pt_y);
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 8;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 24;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = hexValue >> 16;
+    return 1;
+}
+uint8_t _Cb_W_ModbusRTU_REG_CalibPoint_4(sData *str, uint16_t Pos)
+{
+    uint32_t ConvertData = 0;
+    float Convert_F = 0;
+    uint8_t pos = 0;
+    pos = Pos;
+    ConvertData = str->Data_a8[pos+2]<<8 | str->Data_a8[pos+3];
+    ConvertData = (ConvertData << 16) | (str->Data_a8[pos]<<8 | str->Data_a8[pos+1]);
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+2];
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+3];
+    
+    Convert_uint32Hex_To_Float(ConvertData, &Convert_F);
+//    Save_CalibTemperature(_KIND_CALIB_POINT_2, Convert_F);
+    Save_CalibPlus(_E_P_SLOPE, 1, sCalibPlus.var_x_f, Convert_F);
     return 1;
 }
 
@@ -644,8 +716,9 @@ uint8_t Modem_Check_RTU(sData *StrUartRecei)
         return 0;
   
     return 1;
-#endif
+#else
     return 0;
+#endif
 }
 
 

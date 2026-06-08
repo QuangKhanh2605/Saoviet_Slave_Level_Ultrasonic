@@ -97,4 +97,6 @@ lcd_display.pbi: \
   D:\Saoviet_Git\Saoviet_Slave_Level_Ultrasonic\Project_Slave_Level_Ultra\user_app\user_app_interface/button.h \
   D:\Saoviet_Git\Saoviet_Slave_Level_Ultrasonic\Project_Slave_Level_Ultra\EWARM\..\user_glcd\fonts\Liberation_Sans17x17_Alpha.h \
   D:\Saoviet_Git\Saoviet_Slave_Level_Ultrasonic\Project_Slave_Level_Ultra\EWARM\..\user_glcd\fonts\Liberation_Sans15x21_Numbers.h \
-  D:\Saoviet_Git\Saoviet_Slave_Level_Ultrasonic\Project_Slave_Level_Ultra\EWARM/../Core/Inc\tim.h
+  D:\Saoviet_Git\Saoviet_Slave_Level_Ultrasonic\Project_Slave_Level_Ultra\EWARM/../Core/Inc\tim.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\math.h \
+  C:\Program\ Files\ (x86)\IAR\ Systems\Embedded\ Workbench\ 8.3\arm\inc\c\DLib_float_setup.h

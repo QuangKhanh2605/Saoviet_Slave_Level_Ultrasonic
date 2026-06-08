@@ -9,6 +9,7 @@
 /*=========================Fucntion Static=========================*/
 static uint8_t fevent_sensor_entry(uint8_t event);
 static uint8_t fevent_sensor_handle(uint8_t event);
+static uint8_t fevent_handle_measure(uint8_t event);
 static uint8_t fevent_sensor_dac(uint8_t event);
 
 static uint8_t fevent_detect_connect(uint8_t event);
@@ -19,8 +20,9 @@ sEvent_struct               sEventAppSensor[]=
 {
   {_EVENT_SENSOR_ENTRY,              1, 5, 2,                fevent_sensor_entry},            //Doi slave khoi dong moi truyen opera
   {_EVENT_SENSOR_HANDLE,             0, 5, 10,               fevent_sensor_handle}, 
+  {_EVENT_HANDLE_MEASURE,            1, 5, 2000,             fevent_handle_measure},
   {_EVENT_SENSOR_DAC,                1, 5, 500,              fevent_sensor_dac},
-  
+ 
   {_EVENT_DETECT_CONNECT,            1, 5, 15000,            fevent_detect_connect},
   {_EVENT_TEMP_ALARM,                1, 5, 2000,             fevent_temp_alarm},
   {_EVENT_REFRESH_IWDG,              1, 5, 250,              fevent_refresh_iwdg},
@@ -32,6 +34,8 @@ struct_SensorLevel  sSensorLevel = {0};
 struct_TempAlarm    sTempAlarm = {0};
 struct_CalibDAC     sCalibDAC = {0};
 struct_ModeConfig   sModeConfig = {0};
+
+Struct_CalibPlus    sCalibPlus = {0};
 
 extern sData sUart232;
 /*========================Function Handle========================*/
@@ -60,12 +64,34 @@ static uint8_t fevent_sensor_handle(uint8_t event)
         TempU32 = (sUart232.Data_a8[1] - 48)*100 + (sUart232.Data_a8[2] - 48)*10 + (sUart232.Data_a8[3] - 48)*1;
     }
     
-//    sSensorLevel.LevelValueReal_f = (float)(TempU32);
+    sSensorLevel.LevelValueReal_f = (float)(TempU32);
     
-    sSensorLevel.LevelValueReal_f = quickSort_Sampling_Value((int32_t)TempU32);
-    
+    Reset_Buff(&sUart232);
+    fevent_enable(sEventAppSensor, _EVENT_DETECT_CONNECT);
+
+    return 1; 
+}
+
+static uint8_t fevent_handle_measure(uint8_t event)
+{
+//    sSensorLevel.LevelValueReal_f = ConvertTemperature_Calib(sSensorLevel.LevelValueReal_f);
+
+    sCalibPlus.var_x_f = sSensorLevel.LevelValueReal_f;
+    sCalibPlus.var_y_f = Cal_CalibPlus(sCalibPlus.var_x_f);
+    sSensorLevel.LevelValueReal_f = sCalibPlus.var_y_f;
+//    sSensorLevel.LevelValueReal_f = quickSort_Sampling_Value((int32_t)sSensorLevel.LevelValueReal_f);
+//    
 //    sSensorLevel.LevelValueFilter_f = Filter_pH(sSensorLevel.LevelValueReal_f);
-    sSensorLevel.LevelValueFilter_f = ConvertTemperature_Calib(sSensorLevel.LevelValueReal_f);
+//    sSensorLevel.LevelValueFilter_f = ConvertTemperature_Calib(sSensorLevel.LevelValueFilter_f);
+  
+    sSensorLevel.LevelValueFilter_f = 0.8*sSensorLevel.LevelValueFilter_f + 0.2*sSensorLevel.LevelValueReal_f;
+    
+    sSensorLevel.LevelValueFilter_f += sSensorLevel.Calib_Offset;
+    if(sSensorLevel.LevelValueFilter_f < LEVEL_MIN)
+      sSensorLevel.LevelValueFilter_f = LEVEL_MIN;
+    
+    if(sSensorLevel.LevelValueFilter_f > LEVEL_MAX)
+      sSensorLevel.LevelValueFilter_f = LEVEL_MAX;
     
     if(sModeConfig.Mode_u8 == 1)
     {
@@ -79,9 +105,9 @@ static uint8_t fevent_sensor_handle(uint8_t event)
         }
     }
     
-    Reset_Buff(&sUart232);
-    fevent_enable(sEventAppSensor, _EVENT_DETECT_CONNECT);
 
+    
+    fevent_enable(sEventAppSensor, event);
     return 1; 
 }
         
@@ -248,7 +274,7 @@ float Filter_pH(float var)
         varFloat = var;
         
         //Thay doi nhanh du lieu
-        if(x_est_last - varFloat > 10 || varFloat - x_est_last > 10)
+        if(x_est_last - varFloat > 1000 || varFloat - x_est_last > 1000)
         {
            Q *=1000; 
         }
@@ -296,11 +322,7 @@ float ConvertTemperature_Calib(float var)
     
     result = result + sSensorLevel.Calib_Offset;
     
-    if(result < LEVEL_MIN)
-      result = LEVEL_MIN;
-    
-    if(result > LEVEL_MAX)
-      result = LEVEL_MAX;
+
     
     return result;
 }
@@ -324,12 +346,12 @@ void Save_CalibTemperature(uint8_t eKind, float var)
           break;
           
         case _KIND_CALIB_POINT_1:
-          sSensorLevel.CalibPoint1_x_f = sSensorLevel.LevelValueReal_f;
+          sSensorLevel.CalibPoint1_x_f = sCalibPlus.var_x_f;
           sSensorLevel.CalibPoint1_y_f = var;
           break;
           
         case _KIND_CALIB_POINT_2:
-          sSensorLevel.CalibPoint2_x_f = sSensorLevel.LevelValueReal_f;
+          sSensorLevel.CalibPoint2_x_f = sCalibPlus.var_x_f;
           sSensorLevel.CalibPoint2_y_f = var;
           break;
         
@@ -572,6 +594,306 @@ void       Init_ModeConfig(void)
         sModeConfig.Compensation_Level_u16 = LEVEL_MAX;
     }
 #endif  
+}
+
+void Save_CalibPlus(uint8_t Kind, uint8_t Mode, float pt_x, float pt_y)
+{
+#ifdef USING_APP_SENSOR
+    uint8_t aData[100] = {0};
+    uint16_t length = 0;
+    
+    switch(Kind)
+    {
+        case _E_P_ZERO:
+            sCalibPlus.PZero.Mode = Mode;
+            sCalibPlus.PZero.pt_x = pt_x;
+            sCalibPlus.PZero.pt_y = pt_y;
+            break;
+            
+        case _E_P_PLS1:
+            sCalibPlus.PPls1.Mode = Mode;
+            sCalibPlus.PPls1.pt_x = pt_x;
+            sCalibPlus.PPls1.pt_y = pt_y;
+            break;
+            
+        case _E_P_PLS2:
+            sCalibPlus.PPls2.Mode = Mode;
+            sCalibPlus.PPls2.pt_x = pt_x;
+            sCalibPlus.PPls2.pt_y = pt_y;
+            break;
+            
+        case _E_P_SLOPE:
+            sCalibPlus.PSlope.Mode = Mode;
+            sCalibPlus.PSlope.pt_x = pt_x;
+            sCalibPlus.PSlope.pt_y = pt_y;
+            break;
+            
+        default:
+            break;
+    }
+  
+    uint32_t hexUint_PZero_x  = 0;
+    uint32_t hexUint_PZero_y  = 0;
+    uint32_t hexUint_PPls1_x  = 0;
+    uint32_t hexUint_PPls1_y  = 0;
+    uint32_t hexUint_PPls2_x  = 0;
+    uint32_t hexUint_PPls2_y  = 0;
+    uint32_t hexUint_PSlope_x  = 0;
+    uint32_t hexUint_PSlope_y  = 0;
+    
+    hexUint_PZero_x  = Handle_Float_To_hexUint32(sCalibPlus.PZero.pt_x);
+    hexUint_PZero_y  = Handle_Float_To_hexUint32(sCalibPlus.PZero.pt_y);
+    hexUint_PPls1_x  = Handle_Float_To_hexUint32(sCalibPlus.PPls1.pt_x);
+    hexUint_PPls1_y  = Handle_Float_To_hexUint32(sCalibPlus.PPls1.pt_y);
+    hexUint_PPls2_x  = Handle_Float_To_hexUint32(sCalibPlus.PPls2.pt_x);
+    hexUint_PPls2_y  = Handle_Float_To_hexUint32(sCalibPlus.PPls2.pt_y);
+    hexUint_PSlope_x  = Handle_Float_To_hexUint32(sCalibPlus.PSlope.pt_x);
+    hexUint_PSlope_y  = Handle_Float_To_hexUint32(sCalibPlus.PSlope.pt_y);
+    
+    aData[length++] = sCalibPlus.PZero.Mode;
+    aData[length++] = hexUint_PZero_x >> 24;
+    aData[length++] = hexUint_PZero_x >> 16;
+    aData[length++] = hexUint_PZero_x >> 8;
+    aData[length++] = hexUint_PZero_x ;
+    aData[length++] = hexUint_PZero_y >> 24;
+    aData[length++] = hexUint_PZero_y >> 16;
+    aData[length++] = hexUint_PZero_y >> 8;
+    aData[length++] = hexUint_PZero_y ;
+    
+    aData[length++] = sCalibPlus.PPls1.Mode;
+    aData[length++] = hexUint_PPls1_x >> 24;
+    aData[length++] = hexUint_PPls1_x >> 16;
+    aData[length++] = hexUint_PPls1_x >> 8;
+    aData[length++] = hexUint_PPls1_x ;
+    aData[length++] = hexUint_PPls1_y >> 24;
+    aData[length++] = hexUint_PPls1_y >> 16;
+    aData[length++] = hexUint_PPls1_y >> 8;
+    aData[length++] = hexUint_PPls1_y ;
+    
+    aData[length++] = sCalibPlus.PPls2.Mode;
+    aData[length++] = hexUint_PPls2_x >> 24;
+    aData[length++] = hexUint_PPls2_x >> 16;
+    aData[length++] = hexUint_PPls2_x >> 8;
+    aData[length++] = hexUint_PPls2_x ;
+    aData[length++] = hexUint_PPls2_y >> 24;
+    aData[length++] = hexUint_PPls2_y >> 16;
+    aData[length++] = hexUint_PPls2_y >> 8;
+    aData[length++] = hexUint_PPls2_y ;
+    
+    aData[length++] = sCalibPlus.PSlope.Mode;
+    aData[length++] = hexUint_PSlope_x >> 24;
+    aData[length++] = hexUint_PSlope_x >> 16;
+    aData[length++] = hexUint_PSlope_x >> 8;
+    aData[length++] = hexUint_PSlope_x ;
+    aData[length++] = hexUint_PSlope_y >> 24;
+    aData[length++] = hexUint_PSlope_y >> 16;
+    aData[length++] = hexUint_PSlope_y >> 8;
+    aData[length++] = hexUint_PSlope_y ;
+
+    Save_Array(ADDR_SAVE_CALIB_PLUS, aData, length);
+#endif   
+}
+
+void Init_CalibPlus(void)
+{
+#ifdef USING_APP_SENSOR
+  
+    uint32_t hexUint_PZero_x  = 0;
+    uint32_t hexUint_PZero_y  = 0;
+    uint32_t hexUint_PPls1_x  = 0;
+    uint32_t hexUint_PPls1_y  = 0;
+    uint32_t hexUint_PPls2_x  = 0;
+    uint32_t hexUint_PPls2_y  = 0;
+    uint32_t hexUint_PSlope_x  = 0;
+    uint32_t hexUint_PSlope_y  = 0;
+  
+    if(*(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS) != FLASH_BYTE_EMPTY)
+    {
+        sCalibPlus.PZero.Mode = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+2);
+        hexUint_PZero_x  = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+3) << 24;
+        hexUint_PZero_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+4)<< 16;
+        hexUint_PZero_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+5)<< 8;
+        hexUint_PZero_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+6);
+        
+        hexUint_PZero_y  = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+7) << 24;
+        hexUint_PZero_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+8)<< 16;
+        hexUint_PZero_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+9)<< 8;
+        hexUint_PZero_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+10);
+        
+        sCalibPlus.PPls1.Mode = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+11);
+        hexUint_PPls1_x  = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+12) << 24;
+        hexUint_PPls1_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+13)<< 16;
+        hexUint_PPls1_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+14)<< 8;
+        hexUint_PPls1_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+15);
+        
+        hexUint_PPls1_y  = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+16) << 24;
+        hexUint_PPls1_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+17)<< 16;
+        hexUint_PPls1_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+18)<< 8;
+        hexUint_PPls1_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+19);
+        
+        sCalibPlus.PPls2.Mode = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+20);
+        hexUint_PPls2_x  = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+21) << 24;
+        hexUint_PPls2_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+22)<< 16;
+        hexUint_PPls2_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+23)<< 8;
+        hexUint_PPls2_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+24);
+        
+        hexUint_PPls2_y  = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+25) << 24;
+        hexUint_PPls2_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+26)<< 16;
+        hexUint_PPls2_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+27)<< 8;
+        hexUint_PPls2_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+28);
+        
+        sCalibPlus.PSlope.Mode = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+29);
+        hexUint_PSlope_x  = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+30) << 24;
+        hexUint_PSlope_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+31)<< 16;
+        hexUint_PSlope_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+32)<< 8;
+        hexUint_PSlope_x  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+33);
+        
+        hexUint_PSlope_y  = *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+34) << 24;
+        hexUint_PSlope_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+35)<< 16;
+        hexUint_PSlope_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+36)<< 8;
+        hexUint_PSlope_y  |= *(__IO uint8_t*)(ADDR_SAVE_CALIB_PLUS+37);
+        
+        
+        Convert_uint32Hex_To_Float(hexUint_PZero_x, &sCalibPlus.PZero.pt_x);
+        Convert_uint32Hex_To_Float(hexUint_PZero_y, &sCalibPlus.PZero.pt_y);
+        Convert_uint32Hex_To_Float(hexUint_PPls1_x, &sCalibPlus.PPls1.pt_x);
+        Convert_uint32Hex_To_Float(hexUint_PPls1_y, &sCalibPlus.PPls1.pt_y);
+        Convert_uint32Hex_To_Float(hexUint_PPls2_x, &sCalibPlus.PPls2.pt_x);
+        Convert_uint32Hex_To_Float(hexUint_PPls2_y, &sCalibPlus.PPls2.pt_y);
+        Convert_uint32Hex_To_Float(hexUint_PSlope_x, &sCalibPlus.PSlope.pt_x);
+        Convert_uint32Hex_To_Float(hexUint_PSlope_y, &sCalibPlus.PSlope.pt_y);
+    }
+    else
+    {
+        sCalibPlus.PZero.Mode = 1;
+        sCalibPlus.PZero.pt_x = LEVEL_MIN;
+        sCalibPlus.PZero.pt_y = LEVEL_MIN;
+        
+        sCalibPlus.PPls1.Mode = 0;
+        sCalibPlus.PPls1.pt_x = 0;
+        sCalibPlus.PPls1.pt_y = 0;
+        
+        sCalibPlus.PPls2.Mode = 0;
+        sCalibPlus.PPls2.pt_x = 0;
+        sCalibPlus.PPls2.pt_y = 0;
+        
+        sCalibPlus.PSlope.Mode = 1;
+        sCalibPlus.PSlope.pt_x = LEVEL_MAX;
+        sCalibPlus.PSlope.pt_y = LEVEL_MAX;
+    }
+#endif   
+}
+/*======================Function Handle Calib Plus===================*/
+float Cal_Line_AandB(float var_x, float pt_Ax, float pt_Ay, float pt_Bx, float pt_By)
+{
+    float Result = 0;
+    if(pt_Bx == pt_Ax || pt_By == pt_Ay)
+    {
+        return var_x;
+    }
+
+    // y = y1 + (x - x1)*(y2 - y1)/(x2 - x1)
+    Result = pt_Ay +((var_x - pt_Ax) * (pt_By - pt_Ay)) /(pt_Bx - pt_Ax);
+
+    return Result;
+}
+
+float Cal_CalibPlus(float var)
+{
+    Struct_Point_Calib aPCalib[4];
+    uint8_t count = 0;
+
+    // Lay cac diem dang enable
+    if(sCalibPlus.PZero.Mode)
+        aPCalib[count++] = sCalibPlus.PZero;
+
+    if(sCalibPlus.PPls1.Mode)
+        aPCalib[count++] = sCalibPlus.PPls1;
+
+    if(sCalibPlus.PPls2.Mode)
+        aPCalib[count++] = sCalibPlus.PPls2;
+
+    if(sCalibPlus.PSlope.Mode)
+        aPCalib[count++] = sCalibPlus.PSlope;
+
+    // Can it nhat 2 diem
+    if(count < 2)
+        return var;
+
+    // Sap xep theo X tang dan
+    for(uint8_t i = 0; i < (count - 1); i++)
+    {
+        for(uint8_t j = i + 1; j < count; j++)
+        {
+            if(aPCalib[i].pt_x > aPCalib[j].pt_x)
+            {
+                Struct_Point_Calib temp;
+                temp = aPCalib[i];
+                aPCalib[i] = aPCalib[j];
+                aPCalib[j] = temp;
+            }
+        }
+    }
+
+    /*
+        Kiem tra:  x1 < x2 thi phai y1 < y2
+
+        Neu sai: -> bo ca 2 diem
+    */
+    for(uint8_t i = 0; i < (count - 1); i++)
+    {
+        if(aPCalib[i].pt_x == aPCalib[i+1].pt_x || aPCalib[i].pt_y >= aPCalib[i+1].pt_y)
+        {
+            aPCalib[i].Mode   = 0;
+            aPCalib[i+1].Mode = 0;
+        }
+    }
+
+    // Nen mang hop le
+    Struct_Point_Calib valid[4];
+    uint8_t valid_count = 0;
+
+    for(uint8_t i = 0; i < count; i++)
+    {
+        if(aPCalib[i].Mode)
+        {
+            valid[valid_count++] = aPCalib[i];
+        }
+    }
+
+    // Khong du diem hop le
+    if(valid_count < 2)
+        return var;
+
+    // Nho hon diem dau
+    if(var <= valid[0].pt_x)
+    {
+        return Cal_Line_AandB(var,
+                        valid[0].pt_x,
+                        valid[0].pt_y,
+                        valid[1].pt_x,
+                        valid[1].pt_y);
+    }
+
+    // Noi suy tung doan
+    for(uint8_t i = 0; i < (valid_count - 1); i++)
+    {
+        if((var >= valid[i].pt_x) && (var <= valid[i+1].pt_x))
+        {
+            return Cal_Line_AandB(var,
+                            valid[i].pt_x,
+                            valid[i].pt_y,
+                            valid[i+1].pt_x,
+                            valid[i+1].pt_y);
+        }
+    }
+
+    // Lon hon diem cuoi
+    return Cal_Line_AandB(var,
+                    valid[valid_count - 2].pt_x,
+                    valid[valid_count - 2].pt_y,
+                    valid[valid_count - 1].pt_x,
+                    valid[valid_count - 1].pt_y);
 }
 /*==================Handle Define AT command=================*/
 #ifdef USING_AT_CONFIG
@@ -863,6 +1185,7 @@ void       Init_AppSensor(void)
     Init_TempAlarm();
     Init_CalibDAC();
     Init_ModeConfig();
+    Init_CalibPlus();
 #ifdef USING_AT_CONFIG
     /* regis cb serial */
     CheckList_AT_CONFIG[_RESET_SLAVE].CallBack = AT_CMD_Reset_Slave;
