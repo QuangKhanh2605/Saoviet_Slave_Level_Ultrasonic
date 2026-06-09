@@ -877,7 +877,7 @@
                     <item>aSampling_STT</item>
                     <item>sCalibPlus</item>
                     <item>test_x</item>
-                    <item></item>
+                    <item />
                 </expressions>
                 <col-names>
                     <item>Expression</item>
