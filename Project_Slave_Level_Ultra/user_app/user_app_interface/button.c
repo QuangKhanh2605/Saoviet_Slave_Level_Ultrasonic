@@ -141,7 +141,7 @@ void BUTTON_Enter_Process (void)
                 case __SCR_SET_MODE:
                     UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
                     Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, 0,
-                                       __SET_CONFIG_MODE, __SET_CONFIG_MODE, __SET_CONFIG_LEVEL,
+                                       __SET_CONFIG_MODE, __SET_CONFIG_MODE, __SET_CONFIG_RANGE_MAX,
                                        NULL, 0xF1);
                     break;
                     
@@ -249,7 +249,7 @@ void BUTTON_Enter_Process (void)
                         case 0:
                             UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
                             Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, (sLCD.sScreenNow.SubIndex_u8+1),
-                                               __SET_CONFIG_MODE, __SET_CONFIG_MODE, __SET_CONFIG_LEVEL,
+                                               __SET_CONFIG_MODE, __SET_CONFIG_MODE, __SET_CONFIG_RANGE_MAX,
                                                &sButton.Old_value, 0xF2);
                              sButton.Old_value = sModeConfig.Mode_u8;
                              sParaDisplay.ptr_ModeConfig = (uint8_t *)&sButton.Old_value;
@@ -274,7 +274,7 @@ void BUTTON_Enter_Process (void)
                         case 0:
                             UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
                             Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, (sLCD.sScreenNow.SubIndex_u8+1),
-                                               __SET_CONFIG_LEVEL, __SET_CONFIG_MODE, __SET_CONFIG_LEVEL,
+                                               __SET_CONFIG_LEVEL, __SET_CONFIG_MODE, __SET_CONFIG_RANGE_MAX,
                                                &sButton.Old_value, 0xF2);
                              sButton.Old_value = sModeConfig.Compensation_Level_u16;
                             break;
@@ -291,6 +291,63 @@ void BUTTON_Enter_Process (void)
                             break;
                     }
                     break;
+                    
+                case __SET_CONFIG_RANGE_MAX:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, (sLCD.sScreenNow.SubIndex_u8+1),
+                                               __SET_CONFIG_RANGE_MAX, __SET_CONFIG_MODE, __SET_CONFIG_RANGE_MAX,
+                                               &sButton.Old_value, 0xF2);
+                             sButton.Old_value = sModeConfig.range_max;
+                            break;
+                            
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_CHECK_SETTING, 0,
+                                               __CHECK_STATE_SETTING, __CHECK_STATE_SETTING, __CHECK_STATE_SETTING,
+                                               NULL, 0xF0);
+                            sParaDisplay.State_Setting = _STATE_SETTING_ENTER;
+                            break;
+                        
+                        default:
+                            break;
+                    }
+                    break;
+                   
+            }
+            break;
+            
+        case _LCD_SCR_SET_MODE_TAB_2:
+            switch (sLCD.sScreenNow.Para_u8)
+            {
+                case __SET_CONFIG_RANGE_MIN:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE_TAB_2, (sLCD.sScreenNow.SubIndex_u8+1),
+                                               __SET_CONFIG_RANGE_MIN, __SET_CONFIG_RANGE_MIN, __SET_CONFIG_RANGE_MIN,
+                                               &sButton.Old_value, 0xF2);
+                             sButton.Old_value = sModeConfig.range_min;
+                            break;
+                            
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_CHECK_SETTING, 0,
+                                               __CHECK_STATE_SETTING, __CHECK_STATE_SETTING, __CHECK_STATE_SETTING,
+                                               NULL, 0xF0);
+                            sParaDisplay.State_Setting = _STATE_SETTING_ENTER;
+                            break;
+                        
+                        default:
+                            break;
+                    }
+                    break;
+                    
+                default:
+                  break;
                    
             }
             break;
@@ -486,11 +543,28 @@ void BUTTON_Enter_Process (void)
                 switch (sLCD.sScreenBack.Para_u8)
                 {
                     case __SET_CONFIG_MODE:
-                      Save_ModeConfig(sButton.Old_value, sModeConfig.Compensation_Level_u16);
+                      Save_ModeConfig(sButton.Old_value, sModeConfig.Compensation_Level_u16, sModeConfig.range_max, sModeConfig.range_min);
                       break;
                       
                     case __SET_CONFIG_LEVEL:
-                      Save_ModeConfig(sModeConfig.Mode_u8, sButton.Old_value);
+                      Save_ModeConfig(sModeConfig.Mode_u8, sButton.Old_value, sModeConfig.range_max, sModeConfig.range_min);
+                      break;
+                      
+                    case __SET_CONFIG_RANGE_MAX:
+                      Save_ModeConfig(sModeConfig.Mode_u8, sModeConfig.Compensation_Level_u16, sButton.Old_value, sModeConfig.range_min);
+                      break;
+                      
+                    default:
+                      break;
+                }
+                break;
+                
+              case _LCD_SCR_SET_MODE_TAB_2:
+                sParaDisplay.State_Setting = _STATE_SETTING_DONE;
+                switch (sLCD.sScreenBack.Para_u8)
+                {
+                    case __SET_CONFIG_RANGE_MIN:
+                      Save_ModeConfig(sModeConfig.Mode_u8, sModeConfig.Compensation_Level_u16, sModeConfig.range_max, sButton.Old_value);
                       break;
                       
                     default:
@@ -710,6 +784,57 @@ void BUTTON_Up_Process (void)
                                 
                             case 1:
                                 if(sButton.Old_value < LEVEL_MAX)
+                                    sButton.Old_value++;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                        
+                    case __SET_CONFIG_RANGE_MAX:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value < RANGE_MAX)
+                                    sButton.Old_value++;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                }
+            }
+            break;
+            
+        case _LCD_SCR_SET_MODE_TAB_2:
+              if(sLCD.sScreenNow.SubIndex_u8 == 0)
+              {
+                    if (sLCD.sScreenNow.Para_u8 > sLCD.sScreenNow.ParaMin_u8 ) {
+                        sLCD.sScreenNow.Para_u8--;
+                        Display_Set_Screen_Flag(&sLCD.sScreenNow, NULL, 0xF1);
+                    } else {
+                        Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, 0,
+                                               __SET_CONFIG_RANGE_MAX, __SET_CONFIG_MODE, __SET_CONFIG_RANGE_MAX,
+                                               NULL, 0xF1);
+                    }
+              }
+              else
+              {
+                switch (sLCD.sScreenNow.Para_u8)
+                {  
+                    case __SET_CONFIG_RANGE_MIN:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value < sModeConfig.range_max)
                                     sButton.Old_value++;
                                 break;
                             
@@ -969,10 +1094,14 @@ void BUTTON_Down_Process (void)
         case _LCD_SCR_SET_MODE:
               if(sLCD.sScreenNow.SubIndex_u8 == 0)
               {
-                    if (sLCD.sScreenNow.Para_u8 < sLCD.sScreenNow.ParaMax_u8) {
+                    if (sLCD.sScreenNow.Para_u8 == sLCD.sScreenNow.ParaMax_u8) {
+                        Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE_TAB_2, 0,
+                                               __SET_CONFIG_RANGE_MIN, __SET_CONFIG_RANGE_MIN, __SET_CONFIG_RANGE_MIN,
+                                               NULL, 0xF1);
+                    } else {
                         sLCD.sScreenNow.Para_u8++;
+                        Display_Set_Screen_Flag(&sLCD.sScreenNow, NULL, 0xF1);
                     }
-                    Display_Set_Screen_Flag(&sLCD.sScreenNow, NULL, 0xF1);
               }
               else
               {
@@ -1011,9 +1140,56 @@ void BUTTON_Down_Process (void)
                                 break;
                         }
                         break;
+                        
+                    case __SET_CONFIG_RANGE_MAX:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value > sModeConfig.range_min)
+                                    sButton.Old_value--;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
                 }
             }
             break;
+            
+        case _LCD_SCR_SET_MODE_TAB_2:
+              if(sLCD.sScreenNow.SubIndex_u8 == 0)
+              {
+                    if (sLCD.sScreenNow.Para_u8 < sLCD.sScreenNow.ParaMax_u8) {
+                        sLCD.sScreenNow.Para_u8++;
+                    }
+                    Display_Set_Screen_Flag(&sLCD.sScreenNow, NULL, 0xF1);
+              }
+              else
+              {
+                switch (sLCD.sScreenNow.Para_u8)
+                {               
+                    case __SET_CONFIG_RANGE_MIN:
+                        switch(sLCD.sScreenNow.SubIndex_u8)
+                        {
+                            case 0:
+                                break;
+                                
+                            case 1:
+                                if(sButton.Old_value > RANGE_MIN)
+                                    sButton.Old_value--;
+                                break;
+                            
+                            default:
+                                break;
+                        }
+                        break;
+                }
+            }
+            break; 
           
         case _LCD_SCR_SET_CALIB_TAB_1:
               if(sLCD.sScreenNow.SubIndex_u8 == 0)
@@ -1270,7 +1446,7 @@ void BUTTON_ESC_Process (void)
                         case 1:
                             UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
                             Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, (sLCD.sScreenNow.SubIndex_u8-1),
-                                               __SET_CONFIG_MODE, __SET_CONFIG_MODE, __SET_CONFIG_LEVEL,
+                                               __SET_CONFIG_MODE, __SET_CONFIG_MODE, __SET_CONFIG_RANGE_MAX,
                                                &sModeConfig.Mode_u8, 0xF1);
                             sParaDisplay.ptr_ModeConfig = &sModeConfig.Mode_u8;
                             break;
@@ -1293,8 +1469,60 @@ void BUTTON_ESC_Process (void)
                         case 1:
                             UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
                             Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, (sLCD.sScreenNow.SubIndex_u8-1),
-                                               __SET_CONFIG_LEVEL, __SET_CONFIG_MODE, __SET_CONFIG_LEVEL,
+                                               __SET_CONFIG_LEVEL, __SET_CONFIG_MODE, __SET_CONFIG_RANGE_MAX,
                                                &sModeConfig.Compensation_Level_u16, 0xF1);
+                            break;
+                            
+                        default:
+                            break;
+                    }
+                    break;
+                    
+                case __SET_CONFIG_RANGE_MAX:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SETTING, 0,
+                                                __SCR_SET_MODE, __SCR_SET_MODBUS, __SCR_SET_INFOR,
+                                                NULL, 0xF1);
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            break;         
+                          
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE, (sLCD.sScreenNow.SubIndex_u8-1),
+                                               __SET_CONFIG_RANGE_MAX, __SET_CONFIG_MODE, __SET_CONFIG_RANGE_MAX,
+                                               &sModeConfig.range_max, 0xF1);
+                            break;
+                            
+                        default:
+                            break;
+                    }
+                    break;
+                
+              default:
+                break;
+          }
+          break;
+          
+        case _LCD_SCR_SET_MODE_TAB_2:   
+          switch(sLCD.sScreenNow.Para_u8)
+          {
+                case __SET_CONFIG_RANGE_MIN:
+                    switch(sLCD.sScreenNow.SubIndex_u8)
+                    {
+                        case 0:
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SETTING, 0,
+                                                __SCR_SET_MODE, __SCR_SET_MODBUS, __SCR_SET_INFOR,
+                                                NULL, 0xF1);
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            break;         
+                          
+                        case 1:
+                            UTIL_MEM_cpy(&sLCD.sScreenBack, &sLCD.sScreenNow, sizeof(sScreenInformation));
+                            Display_Set_Screen(&sLCD.sScreenNow, _LCD_SCR_SET_MODE_TAB_2, (sLCD.sScreenNow.SubIndex_u8-1),
+                                               __SET_CONFIG_RANGE_MIN, __SET_CONFIG_RANGE_MIN, __SET_CONFIG_RANGE_MIN,
+                                               &sModeConfig.range_min, 0xF1);
                             break;
                             
                         default:

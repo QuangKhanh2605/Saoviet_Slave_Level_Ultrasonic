@@ -22,6 +22,7 @@ uint8_t _Cb_R_ModbusRTU_REG_Zero_Point(sData *str, uint16_t Pos);
 //uint8_t _Cb_R_ModbusRTU_REG_Temp_Object(sData *str, uint16_t Pos);
 //uint8_t _Cb_R_ModbusRTU_REG_Temp_Ambient(sData *str, uint16_t Pos);
 
+uint8_t _Cb_R_ModbusRTU_REG_ID_Restore(sData *str, uint16_t Pos);
 uint8_t _Cb_W_ModbusRTU_REG_ID_Restore(sData *str, uint16_t Pos);
 
 uint8_t _Cb_R_ModbusRTU_REG_Compensation(sData *str, uint16_t Pos);
@@ -45,6 +46,11 @@ uint8_t _Cb_W_ModbusRTU_REG_Mode_Config(sData *str, uint16_t Pos);
 uint8_t _Cb_R_ModbusRTU_REG_Mode_Level(sData *str, uint16_t Pos);
 uint8_t _Cb_W_ModbusRTU_REG_Mode_Level(sData *str, uint16_t Pos);
 
+uint8_t _Cb_R_ModbusRTU_REG_Range_Min(sData *str, uint16_t Pos);
+uint8_t _Cb_W_ModbusRTU_REG_Range_Min(sData *str, uint16_t Pos);
+
+uint8_t _Cb_R_ModbusRTU_REG_Range_Max(sData *str, uint16_t Pos);
+uint8_t _Cb_W_ModbusRTU_REG_Range_Max(sData *str, uint16_t Pos);
 //uint8_t _Cb_R_ModbusRTU_REG_Alarm_State(sData *str, uint16_t Pos);
 //uint8_t _Cb_W_ModbusRTU_REG_Alarm_State(sData *str, uint16_t Pos);
 //
@@ -78,15 +84,17 @@ struct_CheckList_Reg_Modbus_RTU sCheckList_Reg_Modbus_RTU[] =
       {_E_REGISTER_DECIMAL_POINT,   0x0003,     1,        _Cb_R_ModbusRTU_REG_Decimal_Point, NONE_Register_CallBack},
       {_E_REGISTER_VALUE,           0x0004,     1,        _Cb_R_ModbusRTU_REG_Value,         NONE_Register_CallBack},
       {_E_REGISTER_ZERO_POINT,      0x0005,     1,        _Cb_R_ModbusRTU_REG_Zero_Point,    NONE_Register_CallBack},
-      {_E_REGISTER_RESTORE,         0x0006,     1,        NONE_Register_CallBack,           _Cb_W_ModbusRTU_REG_ID_Restore},
-      {_E_REGISTER_COMPENSATION,    0x0007,     2,        _Cb_R_ModbusRTU_REG_Compensation, _Cb_W_ModbusRTU_REG_Compensation},
-      {_E_REGISTER_CALIBPOINT_1,    0x0009,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_1, _Cb_W_ModbusRTU_REG_CalibPoint_1},
-      {_E_REGISTER_CALIBPOINT_2,    0x000B,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_2, _Cb_W_ModbusRTU_REG_CalibPoint_2},
-      {_E_REGISTER_CALIBPOINT_3,    0x000D,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_3, _Cb_W_ModbusRTU_REG_CalibPoint_3},
-      {_E_REGISTER_CALIBPOINT_4,    0x000F,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_4, _Cb_W_ModbusRTU_REG_CalibPoint_4},
+      {_E_REGISTER_RESTORE,         0x0006,     1,        _Cb_R_ModbusRTU_REG_ID_Restore,    _Cb_W_ModbusRTU_REG_ID_Restore},
+      {_E_REGISTER_COMPENSATION,    0x0007,     2,        _Cb_R_ModbusRTU_REG_Compensation,  _Cb_W_ModbusRTU_REG_Compensation},
+      {_E_REGISTER_CALIBPOINT_1,    0x0009,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_1,  _Cb_W_ModbusRTU_REG_CalibPoint_1},
+      {_E_REGISTER_CALIBPOINT_2,    0x000B,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_2,  _Cb_W_ModbusRTU_REG_CalibPoint_2},
+      {_E_REGISTER_CALIBPOINT_3,    0x000D,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_3,  _Cb_W_ModbusRTU_REG_CalibPoint_3},
+      {_E_REGISTER_CALIBPOINT_4,    0x000F,     2,        _Cb_R_ModbusRTU_REG_CalibPoint_4,  _Cb_W_ModbusRTU_REG_CalibPoint_4},
       
       {_E_REGISTER_MODE_CONFIG,     0x0011,     1,        _Cb_R_ModbusRTU_REG_Mode_Config,  _Cb_W_ModbusRTU_REG_Mode_Config},
       {_E_REGISTER_MODE_LEVEL,      0x0012,     1,        _Cb_R_ModbusRTU_REG_Mode_Level,   _Cb_W_ModbusRTU_REG_Mode_Level},
+      {_E_REGISTER_RANGE_MIN,       0x0013,     1,        _Cb_R_ModbusRTU_REG_Range_Min,    _Cb_W_ModbusRTU_REG_Range_Min},
+      {_E_REGISTER_RANGE_MAX,       0x0014,     1,        _Cb_R_ModbusRTU_REG_Range_Max,    _Cb_W_ModbusRTU_REG_Range_Max},
       
       {_E_REGISTER_4_20_MODE,       0x1000,     1,        _Cb_R_ModbusRTU_REG_4_20_Mode,    _Cb_W_ModbusRTU_REG_4_20_Mode},
       {_E_REGISTER_4_20_MIN,        0x1001,     1,        _Cb_R_ModbusRTU_REG_4_20_Min,     _Cb_W_ModbusRTU_REG_4_20_Min},
@@ -206,6 +214,12 @@ uint8_t _Cb_R_ModbusRTU_REG_Zero_Point(sData *str, uint16_t Pos)
 }
 
 /*----------- _E_REGISTER_RESTORE -----------*/
+uint8_t _Cb_R_ModbusRTU_REG_ID_Restore(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0x00;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = 0x00;
+    return 1;
+}
 uint8_t _Cb_W_ModbusRTU_REG_ID_Restore(sData *str, uint16_t Pos)
 {
     uint16_t ConvertData = 0;
@@ -401,7 +415,7 @@ uint8_t _Cb_W_ModbusRTU_REG_Mode_Config(sData *str, uint16_t Pos)
         sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
         sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
         
-        Save_ModeConfig( (uint8_t)ConvertData, sModeConfig.Compensation_Level_u16);
+        Save_ModeConfig( (uint8_t)ConvertData, sModeConfig.Compensation_Level_u16, sModeConfig.range_max, sModeConfig.range_min);
         return 1;
     }
     return 0;
@@ -424,7 +438,53 @@ uint8_t _Cb_W_ModbusRTU_REG_Mode_Level(sData *str, uint16_t Pos)
         sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
         sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
         
-        Save_ModeConfig(sModeConfig.Mode_u8, ConvertData);
+        Save_ModeConfig(sModeConfig.Mode_u8, ConvertData, sModeConfig.range_max, sModeConfig.range_min);
+        return 1;
+    }
+    return 0;
+}
+
+uint8_t _Cb_R_ModbusRTU_REG_Range_Min(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sModeConfig.range_min >> 8;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sModeConfig.range_min;
+    return 1;
+}
+uint8_t _Cb_W_ModbusRTU_REG_Range_Min(sData *str, uint16_t Pos)
+{
+    uint16_t ConvertData = 0;
+    uint8_t pos = 0;
+    pos = Pos;
+    ConvertData = str->Data_a8[pos] << 8 | str->Data_a8[pos+1]; 
+    if(ConvertData <= sModeConfig.range_max)
+    {
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
+        
+        Save_ModeConfig(sModeConfig.Mode_u8, sModeConfig.Compensation_Level_u16, sModeConfig.range_max, ConvertData);
+        return 1;
+    }
+    return 0;
+}
+
+uint8_t _Cb_R_ModbusRTU_REG_Range_Max(sData *str, uint16_t Pos)
+{
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sModeConfig.range_max >> 8;
+    sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = sModeConfig.range_max;
+    return 1;
+}
+uint8_t _Cb_W_ModbusRTU_REG_Range_Max(sData *str, uint16_t Pos)
+{
+    uint16_t ConvertData = 0;
+    uint8_t pos = 0;
+    pos = Pos;
+    ConvertData = str->Data_a8[pos] << 8 | str->Data_a8[pos+1]; 
+    if(ConvertData <= RANGE_MAX)
+    {
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos];
+        sLogData_ModbusRTU.Data_a8[sLogData_ModbusRTU.Length_u16++] = str->Data_a8[pos+1];
+        
+        Save_ModeConfig(sModeConfig.Mode_u8, sModeConfig.Compensation_Level_u16, ConvertData, sModeConfig.range_min);
         return 1;
     }
     return 0;

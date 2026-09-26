@@ -62,12 +62,19 @@ static uint8_t fevent_sensor_handle(uint8_t event)
 //        }
 //        TempU32 = Convert_String_To_Dec(sUart232.Data_a8 , length);
         TempU32 = (sUart232.Data_a8[1] - 48)*100 + (sUart232.Data_a8[2] - 48)*10 + (sUart232.Data_a8[3] - 48)*1;
+        
+        if(sEventAppSensor[_EVENT_HANDLE_MEASURE].e_status == 0)
+        {
+            fevent_enable(sEventAppSensor, _EVENT_HANDLE_MEASURE);
+        }
     }
     
     sSensorLevel.LevelValueReal_f = (float)(TempU32);
     
     Reset_Buff(&sUart232);
     fevent_enable(sEventAppSensor, _EVENT_DETECT_CONNECT);
+    
+
 
     return 1; 
 }
@@ -105,9 +112,13 @@ static uint8_t fevent_handle_measure(uint8_t event)
         }
     }
     
-
+    if(sSensorLevel.LevelValueFilter_f < sModeConfig.range_min && sModeConfig.range_min > LEVEL_MIN)
+        sSensorLevel.LevelValueFilter_f = sModeConfig.range_min;
     
-    fevent_enable(sEventAppSensor, event);
+    if(sSensorLevel.LevelValueFilter_f > sModeConfig.range_max)
+        sSensorLevel.LevelValueFilter_f = sModeConfig.range_max;
+    
+//    fevent_enable(sEventAppSensor, event);
     return 1; 
 }
         
@@ -125,7 +136,8 @@ static uint8_t fevent_sensor_dac(uint8_t event)
         }
         else
         {
-            stamp = (sSensorLevel.LevelValueFilter_f-LEVEL_MIN)/(LEVEL_MAX-LEVEL_MIN);
+//            stamp = (sSensorLevel.LevelValueFilter_f-LEVEL_MIN)/(LEVEL_MAX-LEVEL_MIN);
+            stamp = (sSensorLevel.LevelValueFilter_f-sModeConfig.range_min)/(sModeConfig.range_max-sModeConfig.range_min);
             stamp = stamp * (sCalibDAC.DAC_Max_u16 - sCalibDAC.DAC_Min_u16) + sCalibDAC.DAC_Min_u16;
             Data = (uint32_t)(stamp);
         }
@@ -554,22 +566,30 @@ void Init_CalibDAC(void)
 #endif   
 }
 
-void       Save_ModeConfig(uint8_t Mode, uint16_t Level)
+void       Save_ModeConfig(uint8_t Mode, uint16_t Level, uint16_t range_max, uint16_t range_min)
 {
 #ifdef USING_APP_SENSOR
     uint8_t aData[50] = {0};
     uint8_t length = 0;
   
-    if(Mode <= 1 && (Level >= LEVEL_MIN && Level <= LEVEL_MAX))
+    if(Mode <= 1 && (Level >= LEVEL_MIN && Level <= LEVEL_MAX) && (range_max <= RANGE_MAX) && (range_min < range_max))
     {
         sModeConfig.Mode_u8 = Mode;
         sModeConfig.Compensation_Level_u16 = Level;
+        sModeConfig.range_max = range_max;
+        sModeConfig.range_min = range_min;
         
         aData[length++] = sModeConfig.Mode_u8 >> 8;
         aData[length++] = sModeConfig.Mode_u8 ;
         
         aData[length++] = sModeConfig.Compensation_Level_u16 >> 8;
         aData[length++] = sModeConfig.Compensation_Level_u16 ;
+        
+        aData[length++] = sModeConfig.range_min >> 8;
+        aData[length++] = sModeConfig.range_min ;
+        
+        aData[length++] = sModeConfig.range_max >> 8;
+        aData[length++] = sModeConfig.range_max ;
 
         Save_Array(ADDR_MODE_CONFIGURE, aData, length);
     }
@@ -587,11 +607,19 @@ void       Init_ModeConfig(void)
         
         sModeConfig.Compensation_Level_u16  |= *(__IO uint8_t*)(ADDR_MODE_CONFIGURE+4)<< 8;
         sModeConfig.Compensation_Level_u16  |= *(__IO uint8_t*)(ADDR_MODE_CONFIGURE+5);
+        
+        sModeConfig.range_min  |= *(__IO uint8_t*)(ADDR_MODE_CONFIGURE+6)<< 8;
+        sModeConfig.range_min  |= *(__IO uint8_t*)(ADDR_MODE_CONFIGURE+7);
+        
+        sModeConfig.range_max  |= *(__IO uint8_t*)(ADDR_MODE_CONFIGURE+8)<< 8;
+        sModeConfig.range_max  |= *(__IO uint8_t*)(ADDR_MODE_CONFIGURE+9);
     }
     else
     {
         sModeConfig.Mode_u8 = 0;
         sModeConfig.Compensation_Level_u16 = LEVEL_MAX;
+        sModeConfig.range_min = RANGE_MIN;
+        sModeConfig.range_max = RANGE_MAX;
     }
 #endif  
 }

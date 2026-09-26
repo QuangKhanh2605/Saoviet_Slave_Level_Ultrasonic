@@ -62,8 +62,12 @@ sOjectInformation  sLCDObject[] =
     {   __SET_MODBUS_BR,        "3.Modbus BR: ",   NULL,   _DTYPE_U32,      0x00,   NULL,      3,   4,  0x00,       _LCD_SCR_SET_MODBUS },
     
     {   __SET_CONFIG_TITLE,       "CONFIGURE MODE",  NULL,   _DTYPE_STRING,  0,      NULL,      0,   28, 0x00,      _LCD_SCR_SET_MODE},
-    {   __SET_CONFIG_MODE,        "1.Mode : ",       NULL,   _DTYPE_STRING,  0,      NULL,      1,   4, 0x00,      _LCD_SCR_SET_MODE},
-    {   __SET_CONFIG_LEVEL,       "2.Level: ",       NULL,   _DTYPE_U16,     0xFE,      " m",      2,   4, 0x00,      _LCD_SCR_SET_MODE},
+    {   __SET_CONFIG_MODE,        "1.Mode : ",       NULL,   _DTYPE_STRING,  0,      NULL,      1,   4, 0x00,       _LCD_SCR_SET_MODE},
+    {   __SET_CONFIG_LEVEL,       "2.Level: ",       NULL,   _DTYPE_U16,     0xFE,      " m",      2,   4, 0x00,    _LCD_SCR_SET_MODE},
+    {   __SET_CONFIG_RANGE_MAX,   "3.Rmax : ",       NULL,   _DTYPE_U16,     0xFE,      " m",      3,    4, 0x00,    _LCD_SCR_SET_MODE}, 
+    
+    {   __SET_CONFIG_TITLE_2,     "CONFIGURE MODE",  NULL,   _DTYPE_STRING,  0,         NULL,      0,   28, 0x00,   _LCD_SCR_SET_MODE_TAB_2},
+    {   __SET_CONFIG_RANGE_MIN,   "4.Rmin : ",       NULL,   _DTYPE_U16,     0xFE,      " m",      1,    4, 0x00,    _LCD_SCR_SET_MODE_TAB_2}, 
 
     {   __SCR_CALIB_TAB_1_TITLE,      "CALIBRATION",    NULL,   _DTYPE_STRING,   0,      NULL,      0,   36, 0x00,      _LCD_SCR_SET_CALIB_TAB_1 },
     {   __SCR_CALIB_TAB_1_VALUE,      "Dist: ",         NULL,   _DTYPE_I32,   0xFE,      " m",      1,   4, 0x00,       _LCD_SCR_SET_CALIB_TAB_1 },
@@ -119,6 +123,8 @@ void Display_Init (void)
     
 //    sLCDObject[__SET_MODE_MODE].pData = &sModeConfig.Mode_u8;
     sLCDObject[__SET_CONFIG_LEVEL].pData  = &sModeConfig.Compensation_Level_u16; 
+    sLCDObject[__SET_CONFIG_RANGE_MAX].pData  = &sModeConfig.range_max; 
+    sLCDObject[__SET_CONFIG_RANGE_MIN].pData  = &sModeConfig.range_min; 
     
     sLCDObject[__SCR_CALIB_TAB_1_VALUE].pData = &sParaDisplay.Distance_i32;
     sLCDObject[__SCR_CALIB_TAB_1_VALUE_2].pData = &sParaDisplay.Measure_AD;
@@ -380,8 +386,6 @@ void Update_ParaDisplay(void)
     
     sParaDisplay.Calib_Offset = (int32_t)(roundf(sSensorLevel.Calib_Offset));
     sParaDisplay.Measure_AD   = (int32_t)(roundf(sCalibPlus.var_x_f));
-    
-
 }
 
 void Display_Show_Oject (uint8_t object)

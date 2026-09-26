@@ -8,7 +8,7 @@
 
 #define NUMBER_SAMPLING_SS      15
 
-#define KIND_SENSOR 6   // hoac 9
+#define KIND_SENSOR 9   // hoac 9
 
 #if (KIND_SENSOR == 6)
   #define LEVEL_MIN 50
@@ -21,6 +21,9 @@
 #else
   #error "KIND_SENSOR khong hop le"
 #endif
+
+#define RANGE_MIN   0
+#define RANGE_MAX   LEVEL_MAX
 
 #define CURR_OUT_MIN            4
 #define CURR_OUT_MAX            20
@@ -98,6 +101,8 @@ typedef struct
 {
     uint8_t Mode_u8;
     uint16_t Compensation_Level_u16;
+    uint16_t range_min;
+    uint16_t range_max;
 }struct_ModeConfig;
 
 typedef struct
@@ -140,7 +145,7 @@ void       Init_CalibDAC(void);
 void       Save_CalibPlus(uint8_t Kind, uint8_t Mode, float pt_x, float pt_y);
 void       Init_CalibPlus(void);
 
-void       Save_ModeConfig(uint8_t Mode, uint16_t Level);
+void       Save_ModeConfig(uint8_t Mode, uint16_t Level, uint16_t range_max, uint16_t range_min);
 void       Init_ModeConfig(void);
 
 float      Filter_pH(float var);
